@@ -1,0 +1,41 @@
+{
+  "name": "creatortools",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview --host 0.0.0.0",
+    "test": "./node_modules/.bin/esbuild scripts/smoke.ts --bundle --platform=node --format=esm --outfile=node_modules/.cache/smoke.mjs --log-level=error && node node_modules/.cache/smoke.mjs",
+    "test:render": "./node_modules/.bin/esbuild scripts/render-test.tsx --bundle --platform=node --format=esm --outfile=node_modules/.cache/render.mjs --loader:.css=empty --external:jsdom --external:fake-indexeddb/auto --log-level=error && node node_modules/.cache/render.mjs",
+    "verify:icons": "node scripts/check-icons.mjs",
+    "icons": "python3 scripts/make-icons.py",
+    "verify:css": "node scripts/check-css.mjs",
+    "audit:mobile": "node scripts/mobile-audit.mjs",
+    "verify": "npm run build && npm run verify:icons && npm run verify:css && npm test && npm run test:render"
+  },
+  "dependencies": {
+    "dexie": "^4.0.10",
+    "fake-indexeddb": "^6.2.5",
+    "jspdf": "^2.5.2",
+    "lucide-react": "^0.454.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "zod": "^3.23.8",
+    "zustand": "^4.5.5"
+  },
+  "devDependencies": {
+    "@types/jsdom": "^30.0.0",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.3",
+    "autoprefixer": "^10.4.20",
+    "jsdom": "^29.1.1",
+    "playwright-core": "^1.49.0",
+    "postcss": "^8.4.47",
+    "tailwindcss": "^3.4.14",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.10"
+  }
+}
