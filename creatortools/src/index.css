@@ -1,0 +1,276 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ---------------------------------------------------------------
+   CreatorTools design language — Apple-inspired, restrained,
+   spacious, white/off-white, subtle borders, soft shadows.
+   --------------------------------------------------------------- */
+
+:root {
+  --ct-radius: 18px;
+  --ct-ring: 0 0 0 3px rgba(124, 92, 255, 0.14);
+  color-scheme: light;
+}
+
+html.dark {
+  color-scheme: dark;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  @apply bg-canvas text-ink antialiased;
+  font-feature-settings: 'cv11' 1, 'ss01' 1, 'tnum' 0;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Number alignment for score tables */
+.tnum { font-variant-numeric: tabular-nums; }
+
+/* Scrollbars — barely there */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #d8d8de transparent;
+}
+*::-webkit-scrollbar { width: 9px; height: 9px; }
+*::-webkit-scrollbar-thumb {
+  background: #dcdce2;
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+*::-webkit-scrollbar-thumb:hover { background: #c9c9d1; background-clip: content-box; }
+*::-webkit-scrollbar-track { background: transparent; }
+
+::selection { background: rgba(124, 92, 255, 0.18); }
+
+@layer components {
+  .card {
+    @apply bg-canvas-card rounded-xl2 border border-line shadow-card;
+  }
+  .pad { @apply p-5 sm:p-6; }
+
+  .h1 { @apply text-[26px] sm:text-[34px] font-semibold tracking-[-0.03em] leading-[1.1] text-ink; }
+  .h2 { @apply text-[19px] sm:text-[22px] font-semibold tracking-[-0.02em] text-ink; }
+  .h3 { @apply text-[15px] font-semibold tracking-[-0.01em] text-ink; }
+  .sub { @apply text-[13.5px] leading-relaxed text-ink-mute; }
+  .micro { @apply text-[11.5px] font-medium tracking-[0.06em] uppercase text-ink-faint; }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-full text-[13.5px] font-medium
+           transition-all duration-200 select-none whitespace-nowrap
+           disabled:opacity-40 disabled:cursor-not-allowed;
+  }
+  .btn-md { @apply h-10 px-4; }
+  .btn-sm { @apply h-8 px-3 text-[12.5px]; }
+  .btn-lg { @apply h-12 px-6 text-[14.5px]; }
+  .btn-primary {
+    @apply bg-ink text-white hover:bg-[#2f2f32] active:scale-[.985]
+           shadow-[0_1px_2px_rgba(0,0,0,.16),0_10px_24px_-14px_rgba(0,0,0,.6)];
+  }
+  .btn-accent { @apply bg-lilac-500 text-white hover:bg-lilac-600 active:scale-[.985]; }
+  .btn-ghost { @apply text-ink-soft hover:bg-line-soft hover:text-ink; }
+  .btn-quiet { @apply bg-white border border-line text-ink-soft hover:border-[#d7d7de] hover:text-ink; }
+  .btn-danger { @apply bg-rose-500 text-white hover:bg-rose-600; }
+
+  .field {
+    @apply w-full rounded-2xl border border-line bg-white px-3.5 py-2.5 text-[14px] text-ink
+           placeholder:text-ink-faint/80 outline-none transition
+           focus:border-[#cfc7ff] focus:ring-[3px] focus:ring-lilac-500/15;
+  }
+  .field-sm { @apply py-2 text-[13px] rounded-xl; }
+  .label { @apply block text-[12.5px] font-medium text-ink-soft mb-1.5; }
+  .hint { @apply text-[11.5px] text-ink-faint mt-1.5 leading-snug; }
+
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-full border border-line bg-white
+           px-3 py-1.5 text-[12.5px] text-ink-soft transition
+           hover:border-[#d5d5dd] cursor-pointer select-none;
+  }
+  .chip-on { @apply border-transparent bg-ink text-white hover:bg-ink; }
+
+  /* Standalone text-only button — the primary action inside callouts and
+     disclosure rows. These are not inline links inside running text, so the
+     WCAG inline-link exemption does not apply and they need a real hit area. */
+  .linkbtn {
+    @apply inline-flex items-center gap-1 underline font-medium text-ink-soft
+           hover:text-ink transition-colors;
+  }
+
+  .tag {
+    @apply inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium;
+  }
+  .row-hover { @apply transition-colors hover:bg-[#fbfbfd]; }
+  .skeleton {
+    @apply relative overflow-hidden rounded-xl bg-[#f1f1f4];
+  }
+  .skeleton::after {
+    content: '';
+    @apply absolute inset-0 -translate-x-full animate-shimmer;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.75), transparent);
+  }
+  .prose-ct p { @apply text-[14px] leading-[1.72] text-ink-soft mb-3.5; }
+  .prose-ct h3 { @apply text-[15.5px] font-semibold text-ink mt-6 mb-2; }
+  .prose-ct h4 { @apply text-[14px] font-semibold text-ink mt-4 mb-1.5; }
+  .prose-ct ul { @apply list-disc pl-5 mb-3.5 text-[14px] leading-[1.7] text-ink-soft space-y-1.5; }
+  .prose-ct ol { @apply list-decimal pl-5 mb-3.5 text-[14px] leading-[1.7] text-ink-soft space-y-1.5; }
+  .prose-ct strong { @apply text-ink font-semibold; }
+  .prose-ct blockquote { @apply border-l-2 border-lilac-200 pl-4 italic text-ink-mute my-3.5; }
+}
+
+/* Focus rings only where wanted */
+:focus-visible { outline: none; }
+
+input[type='range'] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  border-radius: 999px;
+  background: #e8e8ed;
+}
+/* Firefox paints its own track/thumb, which `appearance: none` above strips. */
+input[type='range']::-moz-range-track {
+  height: 4px;
+  border-radius: 999px;
+  background: #e8e8ed;
+}
+input[type='range']::-moz-range-thumb {
+  height: 18px;
+  width: 18px;
+  border-radius: 999px;
+  background: #fff;
+  border: 1px solid #dcdce2;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+  cursor: pointer;
+}
+input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  height: 18px;
+  width: 18px;
+  border-radius: 999px;
+  background: #fff;
+  border: 1px solid #dcdce2;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+  cursor: pointer;
+}
+
+.safe-b { padding-bottom: env(safe-area-inset-bottom, 0px); }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+@media print {
+  .no-print { display: none !important; }
+}
+
+/* ------------------------------------------------- overflow containment
+   Grid and flex children default to `min-width: auto`, which means a card
+   holding a wide table, a long <select>, or nowrap text forces its whole
+   column — and on a phone the entire page — wider than the screen. Chrome
+   hides the damage by zooming the layout viewport out, so it never looks like
+   a bug; it just feels slightly off and the text gets small.
+
+   min-width: 0 lets those columns shrink and pushes the scrolling down into
+   the element that should own it (`.overflow-x-auto` rows). Applied to grid
+   children globally because the failure mode is silent and page-specific
+   patches kept missing new pages. */
+.grid > * {
+  min-width: 0;
+}
+
+/* A <select> is as wide as its longest <option> and will happily push a flex
+   row off-screen; controls must never exceed their container. */
+select,
+input,
+textarea {
+  max-width: 100%;
+  min-width: 0;
+}
+
+/* -------------------------------------------------------- touch ergonomics
+   Two platform realities that a desktop-only layout never surfaces:
+
+   1. iOS Safari zooms the whole page when a focused form control is under
+      16px, so a 13px monospace API-key field throws the layout off-centre
+      mid-typing. Keyed to viewport width because it is a phone behaviour.
+   2. Anything you tap needs a real target. Filter chips ship at 33px, text
+      buttons at 19px, sliders as a bare 4px track. Keyed to `pointer: coarse`
+      rather than width, because a 768px iPad is just as much a thumb target
+      as a 390px iPhone — width would have missed it entirely.
+
+   Unlayered on purpose: these must beat the layered component rules above. */
+@media (max-width: 640px) {
+  /* .btn is whitespace-nowrap by design; on a narrow screen a long label such
+     as "Generate product strategy" is wider than its card. Let it wrap instead
+     of pushing the page out — the button just becomes two lines. */
+  .btn {
+    white-space: normal;
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 640px), (pointer: coarse) {
+  /* Covers small viewports *and* every touch device — iPad Safari zooms
+     sub-16px fields on focus just like the iPhone does, and a 768px tablet
+     is wider than the 640px breakpoint.
+     !important is deliberate: fields carry per-instance utilities such as
+     .text-[13px] for monospace keys whose class specificity beats a bare
+     element selector. This is not a design decision — it is the documented
+     way to stop iOS zooming a field into view on focus. */
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+@media (pointer: coarse) {
+  .chip,
+  .linkbtn,
+  .btn-sm,
+  .iconbtn,
+  .tabbtn,
+  .filterpill,
+  .checkline,
+  .field,
+  .field-sm {
+    min-height: 40px;
+  }
+  .iconbtn,
+  .btn-sm {
+    /* square-ish targets: .btn-sm is used for icon-only actions too */
+    min-width: 40px;
+  }
+  .chip {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+  .linkbtn {
+    /* the min-height above supplies the hit area; keep the visual line tight */
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    margin-top: -0.5rem;
+    margin-bottom: -0.5rem;
+  }
+  /* Age sliders: the element *is* a 4px track, so the grab strip is 4px tall.
+     Give the element a thumb-sized box and paint the slim track inside it.
+     The input[type='range'] block above wins on specificity, which is why this
+     has to be repeated at this level rather than fixed with a utility class. */
+  input[type='range'] {
+    height: 28px;
+    background: transparent;
+  }
+  input[type='range']::-webkit-slider-runnable-track {
+    height: 4px;
+    border-radius: 999px;
+    background: #e8e8ed;
+  }
+  input[type='range']::-webkit-slider-thumb {
+    margin-top: -7px;
+  }
+}

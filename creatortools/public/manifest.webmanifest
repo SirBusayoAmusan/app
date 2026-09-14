@@ -1,0 +1,49 @@
+{
+  "name": "CreatorTools \u2014 Opportunity Intelligence",
+  "short_name": "CreatorTools",
+  "description": "Evidence-backed opportunity intelligence: find real problems people are trying to solve, turn them into digital products, and build the system to sell them.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f6f6f8",
+  "theme_color": "#f6f6f8",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "scope": "/",
+  "id": "/",
+  "categories": [
+    "business",
+    "productivity",
+    "marketing"
+  ]
+}

@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="CreatorTools">
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#222226"/>
+      <stop offset="1" stop-color="#17171a"/>
+    </linearGradient>
+    <clipPath id="left">
+      <circle cx="24.45" cy="32.00" r="14.08"/>
+    </clipPath>
+  </defs>
+  <rect width="64" height="64" fill="url(#tile)"/>
+  <circle cx="24.45" cy="32.00" r="14.08" fill="#ecdcff"/>
+  <circle cx="39.55" cy="32.00" r="14.08" fill="#7c5cff"/>
+  <g clip-path="url(#left)">
+    <circle cx="39.55" cy="32.00" r="14.08" fill="#c9b8ff"/>
+  </g>
+</svg>
