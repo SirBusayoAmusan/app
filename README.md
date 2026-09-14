@@ -119,12 +119,46 @@ otherwise ships silently.
 Deploy by serving `dist/` from any static host (Vercel, Cloudflare Pages, Netlify, object storage).
 Hosting only ever serves application files.
 
+## One key is enough
+
+The app is fully usable with **a single AI key**. Evidence collection is on from the first run and
+needs no credential at all, because it reads open, CORS-enabled, *dated* public datasets:
+
+| Source | What it gives | Rate limit |
+| --- | --- | --- |
+| Hacker News (Algolia) — stories | launches, market shifts, tooling gaps, with points + comments | generous |
+| Hacker News (Algolia) — comments | raw pain language: *"I still can't get clients…"* | generous |
+| Stack Exchange | literal questions people typed, with scores and answer counts | 300/day |
+| GitHub Issues | an open issue is an explicitly unmet need; reactions size the demand | 10/min |
+| DEV (tag feed) | practitioner write-ups and post-mortems | generous |
+
+Measured from a browser origin: all four answer with `access-control-allow-origin`. Reddit returns
+`403` with no CORS header and is deliberately absent. A three-query probe returned **51 unique
+results across 16 domains, 51/51 carrying a real publication date and 45 within 90 days** — enough
+to clear the ≥8-domain run gate and the ≥3-domain niche gate with no commercial key.
+
+A commercial search key (Serper) stays available and upgrades *recall*: the free sources skew
+technical, so they are strong on pain and urgency and thinner on mainstream buying behaviour.
+Choosing one is an upgrade, never a prerequisite.
+
+Three measured constraints shape the keyless layer:
+
+1. **These are keyword-AND indexes, not semantic search.** The natural-language queries the
+   commercial providers accept return nothing here — `"freelancers struggling to get clients"`
+   scores `nbHits: 0` on HN and `total_count: 0` on GitHub. Every query is reduced to its two
+   strongest content words first (`keylessKeywords()`), which is why `"freelancers clients"`
+   works and the full sentence does not.
+2. **They are rate-limited**, so each source has a per-run budget and a minimum spacing
+   (`KEYLESS_BUDGET`), refilled by `resetKeylessBudget()` at the start of every run.
+3. **A source returning nothing is normal.** Partial evidence is still evidence; a throttled or
+   empty source never fails the run.
+
 ## First run
 
-1. **Setup** — choose provider (Groq / OpenRouter / custom OpenAI-compatible), paste an API key,
-   pick a model, hit *Test Connection*.
-2. **Add a search key** (Tavily / Serper / Exa) under Settings — this is the evidence source;
-   without it the app will not call anything a trend.
+1. **Setup** — paste an AI key (Groq / OpenRouter / custom OpenAI-compatible), press *Check key*.
+   That is the only thing anyone has to do.
+2. **Evidence** — already connected. Nothing to fill in; a Google search key is offered as an
+   optional upgrade behind one link.
 3. **Audience** — narrow to audience + specific problem + desired outcome + context. Generic
    "fitness / finance / health / marketing" is rejected until it is narrowed.
 4. **Find My Opportunity** — run the pipeline, then open a niche, rank its problems, and promote
@@ -151,7 +185,8 @@ a hard constraint, not a detail. Measured with a real Chromium against the app's
 
 Tavily and Exa send no CORS headers, so the browser refuses the response **before the API key is
 even validated** — it is a property of the provider, not of your key or your network. **Serper.dev
-is therefore the default search provider**, and it is the only one that works with no proxy.
+is therefore an optional upgrade**, not the default: the default is now the keyless public-dataset
+layer above, which needs no credential at all.
 Tavily and Exa remain selectable and now show a "⚠ Needs a CORS proxy" badge with a required
 proxy field; the runtime error names the cause instead of suggesting the network is at fault.
 
@@ -195,7 +230,9 @@ compiled CSS, or if any class is composed from a template literal.
 | `npm run audit:mobile` | 0 layout findings, 0 console errors, 5 viewports × 14 routes |
 | Preview host over the proxy | HTTP 200 (`allowedHosts: true`) |
 | Provider CORS from a real browser | measured — see the table above |
+| Keyless evidence layer, live | 51 unique results / 16 domains / 51 dated / 45 ≤90d from 3 queries |
+| One-key flow in the real UI | AI key only → Discover not gated, Run enabled, 0 console errors |
 
-Still unverified: calls made *with real API keys*. The CORS verdicts above are conclusive (a
-blocked call never reaches key validation), but end-to-end output quality depends on your keys
-and credits.
+Still unverified: calls made *with real AI keys*. The CORS verdicts above are conclusive (a blocked
+call never reaches key validation) and the keyless evidence layer was exercised against the live
+APIs, but model output quality depends on your key and credits.

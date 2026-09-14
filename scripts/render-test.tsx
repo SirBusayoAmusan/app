@@ -59,7 +59,7 @@ const wait = (ms = 250) => new Promise((r) => setTimeout(r, ms));
 
   const bodyText = () => document.body.textContent ?? '';
   const routes: [string, string][] = [
-    ['#/setup', 'Connect your AI'],
+    ['#/setup', 'Your AI key'],
     ['#/home', 'Stop guessing what to sell.'],
     ['#/audience', 'Who are you trying to sell to'],
     ['#/discover', 'Discover profitable niches'],
