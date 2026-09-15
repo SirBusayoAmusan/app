@@ -32,7 +32,7 @@ export async function seedFixture(): Promise<Fixture> {
   await db.research_runs.put({
     id: runId, audience_profile_id: audience.id, audience_snapshot: audience,
     research_type: 'niche_discovery', status: 'complete', stage: 'done', progress: 100,
-    stages: [{ key: 'search', label: 'Scanning current demand', status: 'done', detail: '24 queries · 118 sources' }],
+    stages: [{ key: 'search', label: 'Reading current posts and pages', status: 'done', detail: 'searched 24 ways · 118 pages read' }],
     started_at: now(), completed_at: now(), engine_version: '1.0.0', prompt_version: 'p1.0.0',
     scoring_version: 's1.0.0',
     usage: { ai_calls: 12, search_calls: 34, tokens_in: 51000, tokens_out: 9000, evidence_collected: 118 },

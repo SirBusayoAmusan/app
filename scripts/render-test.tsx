@@ -92,7 +92,7 @@ const wait = (ms = 250) => new Promise((r) => setTimeout(r, ms));
   const { useStore } = await import('../src/store');
   await useStore.getState().reload();
 
-  for (const [hash, needle] of [['#/discover', 'Freelancers struggle'], ['#/trends', 'Evidence 0'], [`#/niche/${nicheId}`, 'Client acquisition'], [`#/problem/${problemId}`, 'why we think this is an opportunity'], ['#/home', 'Top opportunities']] as [string, string][]) {
+  for (const [hash, needle] of [['#/discover', 'Freelancers struggle'], ['#/trends', 'Pages and posts read'], [`#/niche/${nicheId}`, 'Client acquisition'], [`#/problem/${problemId}`, 'why we think this is an opportunity'], ['#/home', 'Top opportunities']] as [string, string][]) {
     dom.window.location.hash = hash;
     dom.window.dispatchEvent(new dom.window.HashChangeEvent('hashchange'));
     await wait(320);

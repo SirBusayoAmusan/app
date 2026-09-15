@@ -46,16 +46,29 @@ const headIcons = [...html.matchAll(/<link[^>]+rel="(icon|shortcut icon|apple-to
 
 if (headIcons.length < 5) fail(`expected at least 5 icon links in index.html, found ${headIcons.length}`);
 
+/* Path style. The app routes on the hash (#/discover), so the document path
+   never gets deeper than the directory it was served from. That makes relative
+   URLs safe here — and *required* on a GitHub Pages project site served from
+   /<repo>/, where root-absolute "/favicon.svg" would 404. Both styles are
+   accepted, but every link must use the same one: a mix means one of them is
+   resolving against the wrong root. */
+const styles = new Set(headIcons.map(({ href }) => (href ?? '').startsWith('/') ? 'absolute' : 'relative'));
+if (styles.size > 1) {
+  fail(`icon paths mix absolute and relative URLs (${[...styles].join(' + ')}) — they must all resolve from the same root`);
+}
+/* Hash routing is what makes relative safe. If the app ever moves to path
+   routing, relative icon URLs would break on deep routes — so assert it. */
+const shellSrc = readFileSync(join(root, 'src/components/shell.tsx'), 'utf8');
+if (!/location\.hash|hashchange/.test(shellSrc)) {
+  fail('router no longer uses hash routing — relative icon paths are only safe with hash routing');
+}
+
 for (const { href, sizes } of headIcons) {
   if (!href || href.startsWith('data:')) {
     fail(`icon link is still a data URI or empty: ${href.slice(0, 40)}`);
     continue;
   }
-  if (!href.startsWith('/')) {
-    fail(`icon path must be root-absolute (${href}) — relative paths break on deep routes`);
-    continue;
-  }
-  const file = join(dist, href.replace(/^\//, ''));
+  const file = join(dist, href.replace(/^(\.\/|\/)/, ''));
   if (!existsSync(file)) {
     fail(`index.html references ${href} but ${file} does not exist`);
     continue;

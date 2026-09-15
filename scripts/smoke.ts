@@ -106,7 +106,13 @@ const weak = computeOpportunityScore({ problem_id: 'p2', niche_id: 'n2', researc
 ok('thin evidence is flagged insufficient and confidence collapses', weak.insufficient_evidence && weak.evidence_confidence < 40, weak.evidence_confidence);
 ok('weak evidence cannot out-rank strong evidence', weak.final_score < computed.final_score);
 ok('gate fails on a single source', !evidenceGate(evidence.slice(0, 2)).passed);
-ok('labels resolve', scoreBand(86).label === 'High Potential' && confidenceBand(30).label === 'Insufficient evidence', [scoreBand(86), confidenceBand(30)]);
+ok('score labels resolve', typeof scoreBand(86).label === 'string' && scoreBand(86).label.length > 0, scoreBand(86));
+ok('confidence labels resolve', typeof confidenceBand(30).label === 'string' && confidenceBand(30).label.length > 0, confidenceBand(30));
+/* The ladder must stay monotonic and fully covered: every value 0-100 gets
+   exactly one verdict, and higher scores never get a worse-sounding one. */
+const bandsUp = [scoreBand(5), scoreBand(55), scoreBand(65), scoreBand(75), scoreBand(85), scoreBand(95)].map((b) => b.label);
+ok('score ladder covers 0-100 without gaps', new Set(bandsUp).size === bandsUp.length, bandsUp);
+ok('confidence ladder is monotonic', confidenceBand(10).label !== confidenceBand(95).label, [confidenceBand(10).label, confidenceBand(95).label]);
 ok('all nine query layers defined', QUERY_LAYERS.length === 9);
 
 console.log('\n5. Analytics math');

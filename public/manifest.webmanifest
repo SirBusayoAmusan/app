@@ -39,7 +39,7 @@
       "purpose": "maskable"
     }
   ],
-  "scope": "/",
+  "scope": "./",
   "id": "/",
   "categories": [
     "business",
