@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { BottomNav, MobileHeader, Page, Sidebar, useRoute, navigate } from './components/shell';
+import { FlowBar } from './components/FlowBar';
 import { ToastHost, Skeleton } from './components/ui';
 import { useStore } from './store';
 import { db } from './core/db/database';
@@ -77,6 +78,8 @@ export default function App() {
         <MobileHeader route={route} />
         <div className="flex-1 min-w-0 pb-16 lg:pb-0">
           <Router route={route} />
+          {/* Every step in the journey gets an explicit way back and on. */}
+          <FlowFooter route={route} />
         </div>
       </div>
       <BottomNav route={route} />
@@ -86,6 +89,17 @@ export default function App() {
         </div>
       ) : null}
       <ToastHost />
+    </div>
+  );
+}
+
+/* The flow bar lives inside the same horizontal padding as page content, so it
+   lines up with the cards above it rather than hugging the window edge. */
+function FlowFooter({ route }: { route: ReturnType<typeof useRoute> }) {
+  if (route.path === '/setup') return null;
+  return (
+    <div className="px-4 sm:px-6 lg:px-8 pb-16 lg:pb-14 mx-auto w-full max-w-[1000px]">
+      <FlowBar />
     </div>
   );
 }

@@ -9,7 +9,7 @@ export type ISO = string;
 
 export type ProviderId = 'groq' | 'openrouter' | 'custom';
 export type StructuredMode = 'json_schema' | 'json_object' | 'text';
-export type SearchProviderId = 'tavily' | 'serper' | 'exa' | 'none';
+export type SearchProviderId = 'tavily' | 'serper' | 'exa' | 'community' | 'none';
 export type SourceType =
   | 'search_result' | 'news' | 'reddit' | 'youtube' | 'forum'
   | 'marketplace' | 'trend_data' | 'social' | 'competitor' | 'other';

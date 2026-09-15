@@ -3,6 +3,7 @@ import { Check, ChevronDown, Copy, Info, Loader2, X } from 'lucide-react';
 import { useStore } from '../store';
 import { copyToClipboard } from '../core/export/exporters';
 import { confidenceBand, scoreBand } from '../core/intelligence/scoringEngine';
+import { Mascot } from './Mascot';
 
 /* ------------------------------- primitives ---------------------------- */
 
@@ -271,13 +272,22 @@ export function Modal({ open, onClose, title, sub, children, footer, wide }: { o
   );
 }
 
-export function EmptyState({ icon, title, body, action, tone = 'neutral' }: { icon?: React.ReactNode; title: string; body?: string; action?: React.ReactNode; tone?: 'neutral' | 'warn' }) {
+export function EmptyState({ icon, title, body, action, footer, tone = 'neutral' }: { icon?: React.ReactNode; title: string; body?: string; action?: React.ReactNode; footer?: React.ReactNode; tone?: 'neutral' | 'warn' }) {
   return (
     <div className={cx('rounded-xl2 border border-dashed p-8 text-center', tone === 'warn' ? 'border-sun-500/40 bg-sun-50/60' : 'border-line bg-white/60')}>
-      {icon ? <div className="flex justify-center text-ink-faint mb-3">{icon}</div> : null}
+      {/* Pip replaces the generic icon when one is not supplied: an empty
+          screen is exactly where a friendly face beats a grey glyph. */}
+      {icon ? (
+        <div className="flex justify-center text-ink-faint mb-3">{icon}</div>
+      ) : (
+        <div className="flex justify-center mb-3">
+          <Mascot mood={tone === 'warn' ? 'alert' : 'sleepy'} size={86} />
+        </div>
+      )}
       <h3 className="h3">{title}</h3>
       {body ? <p className="sub mt-1.5 max-w-md mx-auto">{body}</p> : null}
       {action ? <div className="mt-4 flex flex-wrap items-center justify-center gap-2">{action}</div> : null}
+      {footer ? <div className="mt-4 text-[11.5px] text-ink-faint">{footer}</div> : null}
     </div>
   );
 }

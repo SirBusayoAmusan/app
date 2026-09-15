@@ -57,7 +57,7 @@ export default function Trends() {
     <Page
       wide
       title="Trend intelligence"
-      sub="Every source collected for a run, with its URL, publish date, reliability weighting and the exact query that found it. Nothing in this list was written by a model."
+      sub="Every real page and post behind your results, with its link, the date it was published, and the search that found it. None of it was written by AI."
       badge={run ? <Tag tone="lilac"><Database size={11} /> run {run.id.slice(-6)}</Tag> : undefined}
       actions={
         <>
@@ -80,16 +80,16 @@ export default function Trends() {
         <EmptyState
           icon={<Radar size={22} />}
           title="No evidence collected yet"
-          body="Run discovery to pull current market evidence from your search provider. Everything collected here is traceable to a live URL."
+          body="Run a discovery and everything it reads shows up here. Each line links to the real page it came from."
           action={<Button onClick={() => navigate('/discover')}>Run discovery</Button>}
         />
       ) : (
         <>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
-            <Stat label="Sources kept" value={stats.total} sub={`${stats.independent_domains} independent domains`} />
-            <Stat label="Independent clusters" value={stats.independent_clusters} sub="syndicated copies collapsed" tone="lilac" />
-            <Stat label="Published in 90 days" value={stats.recent_90} sub="freshness gate for trend claims" tone={stats.recent_90 ? 'moss' : 'sun'} />
-            <Stat label="Avg reliability" value={`${(stats.avg_reliability * 100).toFixed(0)}%`} sub="source-type weighting" />
+            <Stat label="Pages and posts read" value={stats.total} sub={`from ${stats.independent_domains} different sites`} />
+            <Stat label="Separate stories" value={stats.independent_clusters} sub="reprints counted only once" tone="lilac" />
+            <Stat label="Published recently" value={stats.recent_90} sub="from the last 90 days" tone={stats.recent_90 ? 'moss' : 'sun'} />
+            <Stat label="How trustworthy" value={`${(stats.avg_reliability * 100).toFixed(0)}%`} sub="weighted by where it came from" />
           </div>
 
           {stats.recent_90 === 0 ? (
@@ -183,14 +183,14 @@ export default function Trends() {
               </Card>
 
               <Card className="pad">
-                <SectionTitle title="Evidence weighting" sub="How much trust each source earned before it could influence a score." icon={<BarChart3 size={16} />} />
+                <SectionTitle title="Why some sources counted more than others" sub="How much each source was allowed to influence the result." icon={<BarChart3 size={16} />} />
                 <div className="space-y-2.5 text-[12.5px]">
                   {[
-                    ['Source reliability', stats.avg_reliability],
-                    ['Freshness', stats.avg_freshness],
-                    ['Relevance to audience', stats.avg_relevance],
-                    ['Directness', stats.avg_directness],
-                    ['Independence', stats.avg_independence],
+                    ['How credible the site is', stats.avg_reliability],
+                    ['How recently it was published', stats.avg_freshness],
+                    ['How close it is to your audience', stats.avg_relevance],
+                    ['How directly it addresses the problem', stats.avg_directness],
+                    ['How independent the voices are', stats.avg_independence],
                   ].map(([label, value]: any) => (
                     <div key={label}>
                       <div className="flex justify-between mb-1"><span className="text-ink-mute">{label}</span><span className="tnum">{(value * 100).toFixed(0)}%</span></div>
@@ -207,7 +207,7 @@ export default function Trends() {
               </Card>
 
               <Card className="pad">
-                <SectionTitle title="Queries by research layer" sub="Coverage across the nine mandatory layers." icon={<Layers size={16} />} />
+                <SectionTitle title="What we searched for" sub="Every angle is covered, every time." icon={<Layers size={16} />} />
                 <div className="space-y-2">
                   {QUERY_LAYERS.map((layer) => (
                     <div key={layer.layer} className="flex items-center justify-between text-[12.5px]">

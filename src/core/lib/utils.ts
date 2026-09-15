@@ -150,6 +150,9 @@ export function mapHttpError(status: number, body: string, provider: string): Ap
   if (status === 404) return err('unsupported_model', 'Model or endpoint not found for this provider.', { status, provider, detail: clean });
   if (status === 429) return err('rate_limit', 'Rate limit reached at the provider. Wait a moment and retry.', { status, provider, detail: clean });
   if (status === 400) {
+    if (/model_not_found|does not exist|decommission|no longer available|not a valid model|unknown model/i.test(clean)) {
+      return err('unsupported_model', 'That model is no longer available at this provider — they retire models often. Load the live model list and pick one of those.', { status, provider, detail: clean });
+    }
     if (/json_schema|response_format|structured/i.test(clean)) {
       return err('unsupported_structured_output', 'This model does not accept strict JSON schema output.', { status, provider, detail: clean });
     }
@@ -174,6 +177,9 @@ export function sourceReliability(domain: string, type: SourceType): number {
   if (d.includes('reuters') || d.includes('bloomberg') || d.includes('ft.com') || d.includes('bbc.') || d.includes('economist') || d.includes('wsj.') || d.includes('nytimes') || d.includes('apnews') || d.includes('cnbc') || d.includes('forbes') || d.includes('techcrunch')) return 0.88;
   if (d.includes('guim.co') || d.includes('theguardian') || d.includes('wired') || d.includes('fastcompany') || d.includes('hbr.org') || d.includes('businessinsider')) return 0.85;
   if (type === 'reddit' || d.includes('reddit.com')) return 0.72;
+  if (d.includes('news.ycombinator.com') || d.includes('hn.algolia')) return 0.74;
+  if (d.includes('github.com')) return 0.76;
+  if (d.includes('dev.to')) return 0.72;
   if (d.includes('quora') || d.includes('stackexchange') || d.includes('stackoverflow')) return 0.7;
   if (d.includes('facebook') || d.includes('x.com') || d.includes('twitter') || d.includes('tiktok') || d.includes('instagram') || d.includes('threads')) return 0.6;
   if (type === 'youtube' || d.includes('youtube') || d.includes('youtu.be')) return 0.68;
@@ -189,6 +195,7 @@ export function inferSourceType(url: string, providerHint?: string): SourceType 
   if (d.includes('youtube.com') || d.includes('youtu.be')) return 'youtube';
   if (d.includes('news') || d.includes('reuters') || d.includes('bbc') || d.includes('techcrunch')) return 'news';
   if (d.includes('quora') || d.includes('forum') || d.includes('community') || d.includes('stackexchange') || d.includes('discourse')) return 'forum';
+  if (d.includes('news.ycombinator.com') || d.includes('github.com') || d.includes('dev.to') || d.includes('stackoverflow')) return 'forum';
   if (d.includes('etsy') || d.includes('gumroad') || d.includes('amazon') || d.includes('udemy') || d.includes('shopify') || d.includes('appsumo')) return 'marketplace';
   if (d.includes('trends.google') || d.includes('semrush') || d.includes('ahrefs') || d.includes('explodingtopics')) return 'trend_data';
   if (d.includes('twitter.com') || d.includes('x.com') || d.includes('linkedin.com') || d.includes('instagram.com') || d.includes('tiktok.com') || d.includes('facebook.com')) return 'social';

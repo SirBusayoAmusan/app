@@ -15,45 +15,72 @@ export interface Preset {
   keys_url: string;
   docs_url: string;
   suggested_models: string[];
+  /** Ordered budget → premium. The first entry is the default, chosen so a
+   *  first run costs cents rather than dollars. */
+  models: ModelOption[];
+  /** One line on what a typical run costs, shown under the picker. */
+  cost_note: string;
   notes: string;
   /** Whether a GET {base}/models listing is supported. */
   list_models: boolean;
 }
 
+export type CostTier = 'budget' | 'balanced' | 'premium';
+export type ModelOption = { id: string; tier: CostTier; note: string };
+
+export const TIER_LABEL: Record<CostTier, string> = {
+  budget: 'Lowest cost',
+  balanced: 'Balanced',
+  premium: 'Highest quality',
+};
+
+/* Groq retires models aggressively — llama-3.3-70b-versatile and
+   llama-3.1-8b-instant were both shut down on 2026-08-16, and kimi-k2,
+   llama-4-maverick and qwen3-32b have gone too. A stale id here fails with
+   model_not_found for every user, so this list is the current catalog and the
+   UI always offers "load the live list". */
+const GROQ_MODELS: ModelOption[] = [
+  { id: 'openai/gpt-oss-120b', tier: 'budget', note: 'Recommended. $0.15 / $0.60 per million tokens.' },
+  { id: 'openai/gpt-oss-20b', tier: 'budget', note: 'Cheapest. $0.075 / $0.30 per million tokens.' },
+  { id: 'qwen/qwen3.6-27b', tier: 'balanced', note: 'Stronger reasoning, higher cost.' },
+  { id: 'groq/compound', tier: 'balanced', note: 'Compound has its own built-in web search.' },
+];
+
+/* Deliberately budget-first. OpenRouter routes to whatever model you name, so
+   "OpenRouter" is not expensive or cheap by itself — claude-sonnet at
+   ~$3/$15 per million is, gemini-flash at a fraction of that is not. */
+const OPENROUTER_MODELS: ModelOption[] = [
+  { id: 'google/gemini-2.5-flash', tier: 'budget', note: 'Fast and inexpensive. Good default for analysis runs.' },
+  { id: 'openai/gpt-4.1-mini', tier: 'budget', note: 'Small, capable, low cost.' },
+  { id: 'deepseek/deepseek-chat-v3.1', tier: 'budget', note: 'Very low cost per token.' },
+  { id: 'openai/gpt-4.1', tier: 'balanced', note: 'Noticeably stronger, mid-priced.' },
+  { id: 'anthropic/claude-sonnet-4.5', tier: 'premium', note: 'Best writing quality. Roughly $3 / $15 per million tokens — budget accordingly.' },
+];
+
 export const PRESETS: Record<ProviderId, Preset> = {
   groq: {
     id: 'groq',
     label: 'Groq',
-    blurb: 'Fast, low-cost inference. Excellent for large evidence-analysis runs.',
+    blurb: 'Fast and genuinely cheap. A full discovery run costs a few cents.',
     base_url: 'https://api.groq.com/openai/v1',
     keys_url: 'https://console.groq.com/keys',
     docs_url: 'https://console.groq.com/docs/structured-outputs',
-    suggested_models: [
-      'llama-3.3-70b-versatile',
-      'openai/gpt-oss-120b',
-      'openai/gpt-oss-20b',
-      'moonshotai/kimi-k2-instruct',
-      'meta-llama/llama-4-maverick-17b-128e-instruct',
-      'qwen/qwen3-32b',
-    ],
+    suggested_models: GROQ_MODELS.map((m) => m.id),
+    models: GROQ_MODELS,
+    cost_note: 'Roughly 1–3 cents per discovery run on the recommended model.',
     notes: 'Groq is OpenAI-compatible and supports JSON Schema structured outputs on supported models.',
     list_models: true,
   },
   openrouter: {
     id: 'openrouter',
     label: 'OpenRouter',
-    blurb: 'One key, many models. Pick per-run tradeoffs between speed, cost and reasoning depth.',
+    blurb: 'One key, any model. You choose the model, so you choose the price.',
     base_url: 'https://openrouter.ai/api/v1',
     keys_url: 'https://openrouter.ai/keys',
     docs_url: 'https://openrouter.ai/docs/features/structured-outputs',
-    suggested_models: [
-      'anthropic/claude-sonnet-4.5',
-      'openai/gpt-4.1-mini',
-      'google/gemini-2.5-flash',
-      'meta-llama/llama-3.3-70b-instruct',
-      'deepseek/deepseek-chat-v3.1',
-      'qwen/qwen3-235b-a22b',
-    ],
+    suggested_models: OPENROUTER_MODELS.map((m) => m.id),
+    models: OPENROUTER_MODELS,
+    cost_note: 'The model decides the price — the default is a few cents per run, not dollars.',
     notes: 'Structured-output support varies by upstream model — CreatorTools probes the capability and adapts.',
     list_models: true,
   },
@@ -65,6 +92,8 @@ export const PRESETS: Record<ProviderId, Preset> = {
     keys_url: '',
     docs_url: '',
     suggested_models: [],
+    models: [],
+    cost_note: 'Whatever your own endpoint charges.',
     notes: 'Any endpoint exposing POST {base}/chat/completions with an OpenAI-shaped body.',
     list_models: true,
   },
@@ -321,9 +350,28 @@ export async function testConnection(config: AIProviderConfig, apiKey: string): 
     if (models.length) {
       checks.push({ label: 'List models', ok: true, detail: `${models.length} models visible to this key` });
       if (config.model && !models.includes(config.model)) {
-        checks.push({ label: 'Model visibility', ok: false, detail: `“${config.model}” was not in the returned list — it may still work, or the id may be misspelled.` });
-      } else if (config.model) {
-        checks.push({ label: 'Model visibility', ok: true, detail: `${config.model} is available` });
+        // A stale id is the single most common cause of "it does not work", and
+        // providers retire models often. Say exactly that, and stop — probing a
+        // model we know is absent just produces a confusing second error.
+        const label = PRESETS[config.provider]?.label ?? config.provider;
+        checks.push({
+          label: 'Model',
+          ok: false,
+          detail: `“${config.model}” is not in ${label}'s current model list — it has most likely been retired. Load the live list and pick one of those.`,
+        });
+        return {
+          ok: false,
+          provider: config.provider,
+          model: config.model,
+          latency_ms: Math.round(performance.now() - started),
+          models_available: models,
+          structured_mode: 'unknown',
+          checks,
+          error: err('unsupported_model', `“${config.model}” is not available at ${label}. Load the live model list and choose one of the returned models.`),
+        };
+      }
+      if (config.model) {
+        checks.push({ label: 'Model', ok: true, detail: `${config.model} is available` });
       }
     }
   } catch (e: any) {

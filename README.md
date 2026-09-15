@@ -190,7 +190,59 @@ layer above, which needs no credential at all.
 Tavily and Exa remain selectable and now show a "⚠ Needs a CORS proxy" badge with a required
 proxy field; the runtime error names the cause instead of suggesting the network is at fault.
 
+## Pip, the guide
+
+Pip is the logo brought to life — the same two overlapping circles, given a face. She exists
+to answer *"what is happening and what do I do next?"* without a paragraph of text, so every
+mood maps to a real state and nothing is decorative:
+
+| Mood | Where | What it means |
+| --- | --- | --- |
+| `idle` | step footers, empty screens | breathing, waiting for you |
+| `thinking` | key check, live discovery run | working — dots orbit, eyes glance up |
+| `happy` | key verified, end of the journey | something landed |
+| `alert` | a rejected key | something needs you |
+| `sleepy` | empty states | nothing to do yet |
+
+She appears where a state needs explaining and nowhere else — the hero, the setup wizard beside
+the progress rail, the run progress card, and empty states. Every animation is slow and small,
+and all of it collapses under `prefers-reduced-motion`.
+
+**Mood classes are written out in full**, not built with a template literal, because the CSS
+guard rejects interpolated class names: a misspelt mood would silently produce a class that does
+not exist and the character would simply stop animating, with no error anywhere.
+
+### Journey navigation
+
+`src/components/FlowBar.tsx` owns the step order. Every screen in the sequence gets an explicit
+Back and Next — including step 1, whose Back goes home, so nobody is ever stranded. Reference
+screens (How it works, Settings) are deliberately outside the flow and get no bar.
+
+Two screens are excluded on purpose: **Setup** has its own per-step Back/Next, and a second
+competing navigation row underneath it would be confusing. **Niche** and **Problem** are annex
+screens that sit inside the journey with their own back/forward targets.
+
+The logo returns to Home from every screen, on both desktop and mobile. There is a test for it.
+
 ## Mobile
+
+
+
+**Run it against the dev server**, not `vite preview`: the audit seeds each context via
+`import('/scripts/fixtures.ts')`, and Vite only transforms that path in dev mode. Against a
+preview build it fails with `Failed to fetch dynamically imported module`.
+
+```
+npx vite --host 0.0.0.0 --port 5178 --strictPort   # in one shell
+node scripts/mobile-audit.mjs http://127.0.0.1:5178
+```
+
+Beyond the built-in checks, these were probed by hand and are clean:
+
+- **Bottom-nav trapping.** Scrolled every route to its maximum and asked whether any control
+  still sits under the fixed nav. Zero — the earlier "trapped" hits were the nav's own buttons.
+- **Range inputs at 28px.** Deliberate: WCAG 2.5.8 sets 24px as the floor for a slider, and the
+  thumb is the real target. Forcing a 40px track would distort the layout for no gain.
 
 Verified with `npm run audit:mobile` — real Chromium, seeded IndexedDB, 5 viewports
 (320 / 390 / 412 / 768 / 1440) × 14 routes, screenshots in `mobile-audit/`.
@@ -228,6 +280,8 @@ compiled CSS, or if any class is composed from a template literal.
 | `npm run verify:icons` | 9 / 9 |
 | `npm run verify:css` | 6 / 6 |
 | `npm run audit:mobile` | 0 layout findings, 0 console errors, 5 viewports × 14 routes |
+| Bottom-nav trapping (extra probe) | 0 unreachable controls at max scroll, 320/390/412 × 13 routes |
+| Jargon sweep (rendered text) | 0 hits across 7 routes, from ~40 patterns |
 | Preview host over the proxy | HTTP 200 (`allowedHosts: true`) |
 | Provider CORS from a real browser | measured — see the table above |
 | Keyless evidence layer, live | 51 unique results / 16 domains / 51 dated / 45 ≤90d from 3 queries |
@@ -236,3 +290,21 @@ compiled CSS, or if any class is composed from a template literal.
 Still unverified: calls made *with real AI keys*. The CORS verdicts above are conclusive (a blocked
 call never reaches key validation) and the keyless evidence layer was exercised against the live
 APIs, but model output quality depends on your key and credits.
+
+## Deploying
+
+`npm run build` emits a fully static `dist/`. Two things matter for hosting:
+
+1. **Asset paths are relative (`base: './'`).** This is what makes a GitHub Pages project
+   site work. Root-absolute `/assets/...` URLs 404 under `/<repo>/`, and the symptom is a
+   blank or stale-looking page — not an obvious error. If a deploy "did not update", check
+   this first.
+2. **Routing is hash-based** (`#/discover`), so no server rewrite rules are needed and deep
+   links work on any static host.
+
+To confirm which build is live, open **Settings → This session → This version**. It shows the
+build stamp written at compile time, so a stale deploy is obvious at a glance rather than
+something you have to guess at.
+
+Verified by serving `dist/` from a plain static directory: page loads with zero failed
+requests and deep routes resolve.

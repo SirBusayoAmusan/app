@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react';
-import { ArrowUpRight, ChevronRight, ExternalLink, FileText, MessageSquare, TrendingUp, Users } from 'lucide-react';
-import type { Evidence, Niche, OpportunityScore, Problem, Signal, Validation } from '../core/types';
+import { ArrowUpRight, Check, ChevronRight, CircleAlert, ExternalLink, FileText, MessageSquare, TrendingUp, Users } from 'lucide-react';
+import type { ComponentKey, Evidence, Niche, OpportunityScore, Problem, Signal, Validation } from '../core/types';
 import { navigate } from './shell';
 import { Card, ConfidenceMeter, ScoreBadge, ScoreBar, Tag, cx } from './ui';
-import { COMPONENT_LABELS, COMPONENT_ORDER, STATUS_LABEL, STATUS_TONE, WEIGHTS } from '../core/intelligence/scoringEngine';
+import { COMPONENT_LABELS, COMPONENT_ORDER, SCORE_BANDS, STATUS_LABEL, STATUS_TONE, WEIGHTS, confidenceBand, scoreBand } from '../core/intelligence/scoringEngine';
 import { relTime, truncate } from '../core/lib/utils';
 
 export interface OpportunityRow { niche: Niche; problem: Problem; score?: OpportunityScore; validation?: Validation }
@@ -28,6 +28,11 @@ export function SourceTypeTag({ type }: { type: string }) {
 export function OpportunityCard({ row, rank, compact }: { row: OpportunityRow; rank?: number; compact?: boolean }) {
   const { niche, problem, score, validation } = row;
   const insufficient = score?.insufficient_evidence;
+  const band = score ? scoreBand(score.final_score) : null;
+  const confidence = confidenceBand(score?.evidence_confidence ?? 0);
+  /* The four that decide whether this is worth a creator's time. */
+  const headline: ComponentKey[] = ['current_demand', 'pain_severity', 'willingness_to_pay', 'market_gap'];
+
   return (
     <Card
       className={cx('pad cursor-pointer transition hover:shadow-lift hover:-translate-y-[1px]', compact && 'p-4')}
@@ -35,40 +40,64 @@ export function OpportunityCard({ row, rank, compact }: { row: OpportunityRow; r
     >
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
-          <div className="flex items-center gap-2 flex-wrap mb-1.5">
+          <div className="flex items-center gap-2 flex-wrap mb-2">
             {rank ? <span className="text-[12px] font-semibold text-ink-faint tnum">#{rank}</span> : null}
             <Tag tone="neutral">{niche.broad_category || 'Niche'}</Tag>
-            {validation ? <Tag tone={STATUS_TONE[validation.status]}>{STATUS_LABEL[validation.status]}</Tag> : <Tag tone="neutral">Not validated yet</Tag>}
-            {niche.quality_gate?.passed ? <Tag tone="moss">Evidence gate passed</Tag> : <Tag tone="sun">Evidence gate: needs more sources</Tag>}
+            {validation ? <Tag tone={STATUS_TONE[validation.status]}>{STATUS_LABEL[validation.status]}</Tag> : <Tag tone="neutral">Still checking</Tag>}
           </div>
           <h3 className="text-[16.5px] sm:text-[17.5px] font-semibold tracking-[-0.02em] leading-snug">{problem.problem_statement}</h3>
           <p className="sub mt-1.5">{truncate(niche.specific_niche, 150)}</p>
         </div>
-        <div className="shrink-0 text-right">
-          {score ? <ScoreBadge score={score.final_score} insufficient={insufficient} size="lg" /> : <span className="text-[12px] text-ink-faint">unscored</span>}
-          <div className="mt-2 w-[104px]"><ConfidenceMeter value={score?.evidence_confidence ?? 0} compact /></div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-5 gap-y-3 mt-4">
-        <MiniStat icon={<Users size={13} />} label="Audience" value={truncate(niche.target_audience, 60)} />
-        <MiniStat icon={<TrendingUp size={13} />} label="Desired outcome" value={truncate(niche.desired_outcome, 60)} />
-        <MiniStat icon={<FileText size={13} />} label="Evidence" value={`${niche.evidence_count} sources · ${niche.independent_domains} domains · ${niche.recent_evidence_count} recent`} />
-        <MiniStat icon={<MessageSquare size={13} />} label="Product" value={truncate(problem.recommended_product || niche.product_formats?.[0] || '—', 60)} />
-      </div>
-
-      {!compact ? (
-        <div className="mt-4 pt-4 border-t border-line-soft flex items-center justify-between gap-4">
-          <div className="flex flex-wrap gap-1.5">
-            {(['current_demand', 'pain_severity', 'willingness_to_pay', 'market_gap'] as const).map((k) => (
-              <span key={k} className="text-[11.5px] text-ink-mute bg-line-soft rounded-full px-2.5 py-1">
-                {COMPONENT_LABELS[k]} <span className="tnum font-medium text-ink">{score?.components?.[k]?.score?.toFixed(0) ?? '—'}</span>
-              </span>
-            ))}
+        {score ? (
+          <div className="shrink-0 text-right">
+            <div className="flex items-baseline gap-1 justify-end">
+              <span className="text-[30px] leading-none font-semibold tracking-[-0.03em] tnum">{score.final_score.toFixed(0)}</span>
+              <span className="text-[12px] text-ink-faint">/100</span>
+            </div>
+            <div className={cx('text-[12.5px] font-medium mt-1.5', insufficient ? 'text-ink-mute' : 'text-ink-soft')}>
+              {insufficient ? 'Not enough to go on' : band?.label}
+            </div>
           </div>
-          <span className="text-[12.5px] text-ink-mute inline-flex items-center gap-1 shrink-0">Open intelligence <ChevronRight size={14} /></span>
+        ) : (
+          <span className="text-[12px] text-ink-faint shrink-0">Not scored</span>
+        )}
+      </div>
+
+      {/* Why it scored that way — plain questions, not metric names. */}
+      {!insufficient && score ? (
+        <div className="grid sm:grid-cols-2 gap-x-8 gap-y-3 mt-5">
+          {headline.map((k) => (
+            <div key={k}>
+              <div className="flex items-baseline justify-between gap-3">
+                <span className="text-[12.5px] text-ink-soft">{COMPONENT_LABELS[k]}</span>
+                <span className="text-[12px] font-medium tnum text-ink-mute shrink-0">{score.components?.[k]?.score?.toFixed(0) ?? '—'}</span>
+              </div>
+              <div className="mt-1.5">
+                <ScoreBar value={score.components?.[k]?.score ?? 0} height={5} tone={insufficient ? 'ink' : 'lilac'} />
+              </div>
+            </div>
+          ))}
         </div>
       ) : null}
+
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-5 gap-y-3 mt-5">
+        <MiniStat icon={<Users size={13} />} label="Who" value={truncate(niche.target_audience, 60)} />
+        <MiniStat icon={<TrendingUp size={13} />} label="They want" value={truncate(niche.desired_outcome, 60)} />
+        <MiniStat icon={<FileText size={13} />} label="Smallest product" value={truncate(problem.recommended_product || niche.product_formats?.[0] || '—', 60)} />
+        <MiniStat
+          icon={<MessageSquare size={13} />}
+          label="Based on"
+          value={`${niche.evidence_count} real sources from ${niche.independent_domains} sites`}
+        />
+      </div>
+
+      <div className="mt-4 pt-4 border-t border-line-soft flex flex-wrap items-center justify-between gap-3">
+        <span className="text-[12px] text-ink-mute inline-flex items-center gap-1.5">
+          {insufficient ? <CircleAlert size={13} className="text-sun-600" /> : <Check size={13} className="text-moss-600" />}
+          {insufficient ? 'Not enough current evidence yet' : `${confidence.label} · ${niche.recent_evidence_count} sources from the last 90 days`}
+        </span>
+        <span className="text-[12.5px] text-ink-mute inline-flex items-center gap-1 shrink-0">See why <ChevronRight size={14} /></span>
+      </div>
     </Card>
   );
 }
@@ -224,16 +253,24 @@ export function SignalList({ signals, evidence }: { signals: Signal[]; evidence:
   );
 }
 
+/* Built from SCORE_BANDS rather than hardcoded, so the legend can never drift
+   out of step with the labels the cards actually show. */
 export function ScoreLegend() {
+  const tones: Record<string, string> = {
+    'Excellent opportunity': 'moss',
+    'Strong opportunity': 'moss',
+    'Good opportunity': 'lilac',
+    'Worth investigating': 'sun',
+    'Unclear so far': 'sun',
+    'Probably skip this one': 'neutral',
+  };
   return (
     <div className="flex flex-wrap gap-2 text-[11.5px]">
-      {[
-        ['🔥 Very Hot 90+', 'moss'],
-        ['🚀 High Potential 80-89', 'moss'],
-        ['💰 Strong 70-79', 'lilac'],
-        ['🟡 Promising 60-69', 'sun'],
-        ['⚪ Weak <50', 'neutral'],
-      ].map(([label, tone]: any) => <Tag key={label} tone={tone}>{label}</Tag>)}
+      {[...SCORE_BANDS].reverse().filter(([lo]) => lo >= 50).map(([lo, hi, label]) => (
+        <Tag key={label} tone={(tones[label] ?? 'neutral') as any}>
+          {label} {lo}{lo >= 100 ? '' : lo >= 90 ? '+' : `–${Math.floor(hi)}`}
+        </Tag>
+      ))}
     </div>
   );
 }

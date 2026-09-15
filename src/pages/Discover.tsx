@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
-  AlertTriangle, ChevronDown, CircleDashed, Compass, Filter, ListChecks, Loader2, Play, RefreshCw,
+  AlertTriangle, Check, ChevronDown, CircleDashed, Compass, Filter, KeyRound, ListChecks, Loader2, Play, RefreshCw,
   Search, Square, TriangleAlert, Users, XCircle,
 } from 'lucide-react';
 import { Page, navigate, useRoute } from '../components/shell';
+import { Mascot } from '../components/Mascot';
 import { Button, Callout, Card, Chip, EmptyState, Modal, SectionTitle, Tag, cx } from '../components/ui';
 import { OpportunityCard, ScoreLegend, type OpportunityRow } from '../components/intelligence';
 import { useStore } from '../store';
@@ -135,7 +136,16 @@ export default function Discover() {
       wide
       title="Discover profitable niches"
       sub="Find specific markets and problems with real current demand — evidence first, then analysis, then a transparent score."
-      badge={activeRun ? <Tag tone={activeRun.status === 'complete' ? 'moss' : activeRun.status === 'failed' ? 'rose' : 'sun'}>run {activeRun.status}</Tag> : undefined}
+      badge={
+        activeRun
+          ? <Tag tone={activeRun.status === 'complete' ? 'moss' : activeRun.status === 'failed' ? 'rose' : 'sun'}>
+              {activeRun.status === 'complete' ? 'finished'
+                : activeRun.status === 'failed' ? 'stopped'
+                  : activeRun.status === 'running' ? 'running'
+                    : !searchReady.ready ? 'needs a search key' : 'partly finished'}
+            </Tag>
+          : undefined
+      }
       actions={
         running ? (
           <Button variant="quiet" onClick={() => { if (activeRunId) cancelRun(activeRunId); toast({ tone: 'info', title: 'Cancelling after the current call' }); }}>
@@ -143,8 +153,12 @@ export default function Discover() {
           </Button>
         ) : (
           <>
-            <Button variant="quiet" onClick={() => setShowPlan(true)}><ListChecks size={14} /> Query plan</Button>
-            <Button onClick={start}><Play size={14} /> {rows.length ? 'Run again' : 'Run discovery'}</Button>
+            <Button variant="quiet" onClick={() => setShowPlan(true)}><ListChecks size={14} /> See the plan</Button>
+            {connected && searchReady.ready ? (
+              <Button onClick={start}><Play size={14} /> {rows.length ? 'Run again' : 'Find my opportunity'}</Button>
+            ) : (
+              <Button onClick={() => navigate('/setup')}>{connected ? 'Add a search key' : 'Connect your key'}</Button>
+            )}
           </>
         )
       }
@@ -152,8 +166,10 @@ export default function Discover() {
       {running && progress ? (
         <div className="mb-5 space-y-3">
           <Card className="pad">
-            <div className="flex items-center gap-3">
-              <Loader2 size={16} className="animate-spin text-lilac-500" />
+            <div className="flex items-center gap-3.5">
+              {/* Pip works alongside the progress bar rather than replacing it:
+                  the label says what, she says "someone is on it". */}
+              <Mascot mood="thinking" size={54} />
               <div className="flex-1 min-w-0">
                 <div className="text-[14px] font-medium">{progress.label}</div>
                 {progress.detail ? <div className="text-[12.5px] text-ink-mute mt-0.5 truncate">{progress.detail}</div> : null}
@@ -195,29 +211,47 @@ export default function Discover() {
         </Callout>
       ) : null}
 
-      {!running && activeRun?.error && !rows.length ? (
-        <div className="mt-4"><Callout tone="warn" title="Discovery could not produce opportunities">{activeRun.error}</Callout></div>
+      {!running && activeRun?.error && !rows.length && searchReady.ready && connected ? (
+        <div className="mt-4"><Callout tone="warn" title="This run did not find an opportunity">{activeRun.error}</Callout></div>
       ) : null}
 
       {!running && !rows.length ? (
         <div className="mt-5">
           <EmptyState
             icon={<Compass size={22} />}
-            title="Run your first discovery"
+            title={
+              !connected ? 'One key and you are ready'
+                : !searchReady.ready ? 'One more key and you are ready'
+                  : 'Find your first opportunity'
+            }
             body={
               !connected
-                ? 'Connect your own AI provider to start. It powers the analysis — never the market facts.'
+                ? 'CreatorTools runs on your own AI key. Add it once, and it stays in this browser session — no account, nothing stored.'
                 : !searchReady.ready
                   ? searchReady.reason
-                  : `CreatorTools will run ${settings?.methodology.max_queries ?? 24} layered queries through your ${settings?.search?.id} key, keep only dated sources with URLs, then mine and score problems.`
+                  : 'CreatorTools will read current pages and posts for your audience, keep only the sources it can cite, and rank the problems underneath them — then show you exactly how each score was calculated.'
+            }
+            footer={
+              connected && searchReady.ready ? (
+                <span className="inline-flex items-center gap-1.5">
+                  <Check size={13} className="text-moss-600" />
+                  Reading <strong className="text-ink-soft font-medium">{searchReady.label}</strong>
+                  {searchReady.label === 'Public discussion data'
+                    ? ' — Hacker News, Stack Overflow, GitHub and DEV, free and keyless'
+                    : ''}
+                </span>
+              ) : null
             }
             tone={connected && !searchReady.ready ? 'warn' : 'neutral'}
             action={
-              <>
-                <Button onClick={start} disabled={!connected}><Play size={14} /> Run discovery</Button>
-                {!connected ? <Button variant="quiet" onClick={() => navigate('/setup')}>Open setup</Button> : null}
-                {!searchReady.ready && searchReady.reason ? <Button variant="quiet" onClick={() => navigate('/setup')}>Add search key</Button> : null}
-              </>
+              !connected || !searchReady.ready ? (
+                <>
+                  <Button onClick={() => navigate('/setup')}><KeyRound size={14} /> {connected ? 'Add a search key' : 'Connect your key'}</Button>
+                  {!connected ? null : <Button variant="quiet" onClick={() => navigate('/audience')}>Review audience</Button>}
+                </>
+              ) : (
+                <Button onClick={start}><Play size={14} /> Find my opportunity</Button>
+              )
             }
           />
         </div>
@@ -241,21 +275,21 @@ export default function Discover() {
                 <Filter size={14} /> Sort
               </div>
               <select className="field field-sm w-auto" value={sort} onChange={(e: any) => setSort(e.target.value)}>
-                <option value="final_score">Opportunity score</option>
-                <option value="evidence_confidence">Evidence confidence</option>
-                <option value="current_demand">Current demand</option>
-                <option value="trend_momentum">Trend momentum</option>
-                <option value="pain_severity">Pain severity</option>
+                <option value="final_score">Best opportunity</option>
+                <option value="evidence_confidence">Best supported</option>
+                <option value="current_demand">Most in demand</option>
+                <option value="trend_momentum">Fastest growing</option>
+                <option value="pain_severity">Most painful</option>
               </select>
             </div>
             <div className="flex flex-wrap gap-2 mt-3.5">
               {[
                 ['all', 'All'],
-                ['validated', 'Validated'],
-                ['mixed', 'Mixed evidence'],
+                ['validated', 'Backed by sources'],
+                ['mixed', 'Mixed proof'],
                 ['80', 'Score 80+'],
                 ['70', 'Score 70+'],
-                ['insufficient', 'Insufficient evidence'],
+                ['insufficient', 'Not enough proof'],
               ].map(([key, label]) => (
                 <Chip key={key} active={labelFilter === key} onClick={() => setLabelFilter(key)}>{label}</Chip>
               ))}
@@ -263,7 +297,7 @@ export default function Discover() {
             <div className="mt-4 pt-4 border-t border-line-soft flex flex-wrap items-center justify-between gap-3">
               <ScoreLegend />
               <div className="text-[11.5px] text-ink-faint">
-                {activeRun ? `${queries.length} queries · ${bundle?.evidence.length ?? 0} sources · engine ${activeRun.engine_version} · scoring ${activeRun.scoring_version}` : ''}
+                {activeRun ? `Read ${bundle?.evidence.length ?? 0} real pages and posts` : ''}
               </div>
             </div>
           </Card>
@@ -351,9 +385,9 @@ export default function Discover() {
                 </div>
                 <div className="mt-5 pt-4 border-t border-line grid grid-cols-2 sm:grid-cols-4 gap-3 text-[12px]">
                   <Meta label="Started" value={activeRun ? relTime(activeRun.started_at) : '—'} />
-                  <Meta label="Model calls" value={String(activeRun?.usage.ai_calls ?? 0)} />
-                  <Meta label="Search calls" value={String(activeRun?.usage.search_calls ?? 0)} />
-                  <Meta label="Sources kept" value={String(bundle?.evidence.length ?? 0)} />
+                  <Meta label="Times it asked the AI" value={String(activeRun?.usage.ai_calls ?? 0)} />
+                  <Meta label="Pages requested" value={String(activeRun?.usage.search_calls ?? 0)} />
+                  <Meta label="Kept as evidence" value={String(bundle?.evidence.length ?? 0)} />
                 </div>
                 {activeRun ? (
                   <div className="mt-4 flex justify-end">

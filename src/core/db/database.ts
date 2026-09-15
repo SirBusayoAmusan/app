@@ -116,7 +116,10 @@ export async function getSettings(): Promise<SettingsRow> {
     default_location: 'Global',
     default_language: 'English',
     ai: null,
-    search: null,
+    /* Keyless public-discussion sources are on from the first run, so one AI
+       key is enough to produce real, dated evidence. A commercial search key
+       (Serper) upgrades recall but is never required. */
+    search: { id: 'community', enabled: true },
     methodology: { ...DEFAULT_METHODOLOGY },
     created_at: nowISO(),
     updated_at: nowISO(),

@@ -114,7 +114,7 @@ export default function Audience() {
           </Card>
 
           <Card className="pad">
-            <SectionTitle title="Interests & platforms" sub="Interests steer the topic hypotheses. Platforms steer content and paid recommendations." />
+            <SectionTitle title="Interests & platforms" sub="Interests decide what we search for. Platforms shape the content and ads you get." />
             <Field label="Interests / topics they care about" hint="Add 3-6 specific topics. “digital marketing”, “personal finance”, “freelancing”.">
               <div className="flex gap-2">
                 <Input
@@ -154,13 +154,15 @@ export default function Audience() {
             <Callout tone="warn" title="This audience is still fairly broad">
               CreatorTools works best when it can look for a narrow problem inside a narrow audience. Add specific interests, set a
               concrete location (or accept “Global” knowingly), and narrow the age band. Discovery will still run — but expect more
-              mixed evidence and more “insufficient evidence” markings.
+              mixed results and more cases where we have to tell you we could not find enough.
             </Callout>
           ) : null}
 
+          {/* The flow bar below already provides Back/Next consistently. The
+              old in-page "Back to discovery" actually pointed *forward* from
+              step 1, which is worse than having no back button at all. */}
           <div className="flex flex-wrap gap-3">
             <Button size="lg" onClick={save} loading={saving}><Save size={15} /> Save & find opportunities</Button>
-            <Button size="lg" variant="quiet" onClick={() => navigate('/discover')}>Back to discovery</Button>
           </div>
         </div>
 
@@ -169,7 +171,7 @@ export default function Audience() {
             <div className="flex items-center gap-2 mb-2.5"><Info size={15} /> <h3 className="h3">How these inputs are used</h3></div>
             <ul className="space-y-2 text-[12.5px] text-ink-mute leading-relaxed">
               <li>• <strong className="text-ink">Location + language</strong> set geo/language parameters on every search call, so evidence matches the market you can actually sell into.</li>
-              <li>• <strong className="text-ink">Interests + business type</strong> become the topic hypotheses that the query engine expands across nine research layers.</li>
+              <li>• <strong className="text-ink">Interests + business type</strong> become the topics we always search from nine different angles.</li>
               <li>• <strong className="text-ink">Experience level</strong> changes how problems are ranked — beginners have simpler, more painful problems worth smaller products.</li>
               <li>• <strong className="text-ink">Income level</strong> sets the price ceiling logic in the pricing engine.</li>
               <li>• <strong className="text-ink">Platforms</strong> decide which organic and paid channels the marketing and advertising engines prioritise.</li>

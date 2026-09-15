@@ -26,17 +26,33 @@ export const WEIGHTS: Record<ComponentKey, number> = {
   competition_opportunity: 0.05,
 };
 
+/* Labels are written as plain questions a creator would actually ask, so a
+   number like "72" reads as an answer rather than an analyst's metric. */
 export const COMPONENT_LABELS: Record<ComponentKey, string> = {
-  current_demand: 'Current demand',
-  trend_momentum: 'Trend momentum',
-  pain_severity: 'Pain severity',
-  willingness_to_pay: 'Willingness to pay',
-  problem_frequency: 'Problem frequency',
-  market_gap: 'Market gap',
-  emotional_intensity: 'Emotional intensity',
-  product_feasibility: 'Product feasibility',
-  viral_content_potential: 'Viral content potential',
-  competition_opportunity: 'Competition opportunity',
+  current_demand: 'People want this now',
+  trend_momentum: 'It is getting more popular',
+  pain_severity: 'It really hurts them',
+  willingness_to_pay: 'They already pay to fix it',
+  problem_frequency: 'It comes up again and again',
+  market_gap: 'Current options leave them cold',
+  emotional_intensity: 'They feel strongly about it',
+  product_feasibility: 'You could build this quickly',
+  viral_content_potential: 'It spreads by itself',
+  competition_opportunity: 'Rivals have obvious weak spots',
+};
+
+/** One-line explanation shown beside each bar, so nothing needs decoding. */
+export const COMPONENT_HELP: Record<ComponentKey, string> = {
+  current_demand: 'How many people are actively looking for help with this right now.',
+  trend_momentum: 'Whether interest is rising or fading.',
+  pain_severity: 'How badly this affects their day or their income.',
+  willingness_to_pay: 'Proof they already spend money trying to solve it.',
+  problem_frequency: 'How often they run into it, not just once.',
+  market_gap: 'Whether what already exists fails them.',
+  emotional_intensity: 'How frustrated or worried they sound when they talk about it.',
+  product_feasibility: 'Whether a small product could genuinely fix it.',
+  viral_content_potential: 'Whether the topic gets shared and talked about.',
+  competition_opportunity: 'Whether the big players are overlooking this group.',
 };
 
 export const COMPONENT_ORDER: ComponentKey[] = [
@@ -53,20 +69,21 @@ export const CONFIDENCE_WEIGHTS = {
 };
 
 export const CONFIDENCE_BANDS: [number, number, string, string][] = [
-  [90, 100, 'Strong evidence', 'Multiple independent, recent, directly relevant sources agree.'],
-  [75, 89, 'Good evidence', 'Consistent signals across several independent sources.'],
-  [60, 74, 'Moderate evidence', 'Enough signal to act on with caution; some gaps remain.'],
-  [40, 59, 'Weak evidence', 'Thin or indirect support. Treat scores as provisional.'],
-  [0, 39, 'Insufficient evidence', 'Not enough current evidence to support an opportunity claim.'],
+  [90, 100, 'Very well supported', 'Many separate, recent sources agree on this.'],
+  [75, 89, 'Well supported', 'Several separate sources say the same thing.'],
+  [60, 74, 'Fairly supported', 'Enough to act on, but some gaps remain.'],
+  [40, 59, 'Thinly supported', 'Few or indirect sources. Treat the score as provisional.'],
+  [0, 39, 'Not enough to go on', 'Too little current evidence to call this an opportunity.'],
 ];
 
+/* Plain verdicts. A reader should understand the ladder without a legend. */
 export const SCORE_BANDS: [number, number, string, string][] = [
-  [90, 100, 'Very Hot', '🔥'],
-  [80, 89.999, 'High Potential', '🚀'],
-  [70, 79.999, 'Strong Opportunity', '💰'],
-  [60, 69.999, 'Promising', '🟡'],
-  [50, 59.999, 'Needs Validation', '🟡'],
-  [0, 49.999, 'Weak Opportunity', '⚪'],
+  [90, 100, 'Excellent opportunity', '🔥'],
+  [80, 89.999, 'Strong opportunity', '🚀'],
+  [70, 79.999, 'Good opportunity', '💰'],
+  [60, 69.999, 'Worth investigating', '🟡'],
+  [50, 59.999, 'Unclear so far', '🟡'],
+  [0, 49.999, 'Probably skip this one', '⚪'],
 ];
 
 export function confidenceBand(score: number) {
@@ -79,12 +96,13 @@ export function scoreBand(score: number) {
   return { label: row?.[2] ?? 'Weak Opportunity', emoji: row?.[3] ?? '⚪' };
 }
 
+/* Badges read as a verdict on the proof, not as a technical status code. */
 export const STATUS_LABEL: Record<ValidationStatus, string> = {
-  validated: 'Validated',
-  promising: 'Promising',
-  mixed: 'Mixed evidence',
-  weak: 'Weak evidence',
-  insufficient_evidence: 'Insufficient evidence',
+  validated: 'Backed by sources',
+  promising: 'Looks promising',
+  mixed: 'Sources disagree',
+  weak: 'Thin proof',
+  insufficient_evidence: 'Not enough proof yet',
 };
 
 export const STATUS_TONE: Record<ValidationStatus, 'moss' | 'lilac' | 'sun' | 'rose' | 'neutral'> = {

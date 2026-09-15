@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
   BarChart3, Bell, BookOpen, Compass, DollarSign, Home, Layers, LayoutGrid, Megaphone,
-  Menu, Rocket, Settings as SettingsIcon, Sparkles, TrendingUp, X, Zap,
+  Menu, Rocket, Settings as SettingsIcon, ShieldCheck, TrendingUp, X, Zap,
 } from 'lucide-react';
 import { useStore } from '../store';
 import { cx, IconButton, Tag } from './ui';
@@ -127,9 +127,9 @@ export function Sidebar({ route }: { route: Route }) {
       </nav>
       <div className="px-4 pb-5">
         <div className="rounded-xl2 border border-line bg-canvas p-3.5">
-          <div className="flex items-center gap-2 text-[12px] font-medium text-ink"><Sparkles size={13} /> Local-first</div>
+          <div className="flex items-center gap-2 text-[12px] font-medium text-ink"><ShieldCheck size={13} /> Private by design</div>
           <p className="text-[11.5px] text-ink-faint mt-1.5 leading-snug">
-            Research and products stay in this browser. API keys stay in memory for this session only.
+            Everything you make stays on this device. There is no account and nothing is uploaded.
           </p>
         </div>
       </div>

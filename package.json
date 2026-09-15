@@ -13,7 +13,9 @@
     "icons": "python3 scripts/make-icons.py",
     "verify:css": "node scripts/check-css.mjs",
     "audit:mobile": "node scripts/mobile-audit.mjs",
-    "verify": "npm run build && npm run verify:icons && npm run verify:css && npm test && npm run test:render"
+    "verify": "npm run build && npm run verify:icons && npm run verify:css && npm test && npm run test:render",
+    "serve": "npx vite preview --host 0.0.0.0 --port 4173 --strictPort",
+    "dist:check": "node scripts/check-icons.mjs && npm run verify:css"
   },
   "dependencies": {
     "dexie": "^4.0.10",

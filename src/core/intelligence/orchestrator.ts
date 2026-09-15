@@ -11,11 +11,10 @@
      6 extract evidence-bound signals
    ------------------------------------------------------------------ */
 import type {
-  AudienceProfile, Evidence, ID, Niche, Problem, ProgressEvent, QuerySpec, ResearchRun, SettingsRow,
-} from '../types';
+  AudienceProfile, Evidence, ID, Niche, Problem, ProgressEvent, QuerySpec, ResearchRun, SettingsRow, SearchProviderConfig } from '../types';
 import { db, bumpUsage, createRun, nowISO, patchRun, uid } from '../db/database';
 import { err, mapLimit, rankEvidenceUnsafe, round1, tokenize } from './fingerprint';
-import { runSearch, searchProviderReady, type RawResult } from './searchProviders';
+import { resetKeylessBudget, runSearch, searchProviderReady, type RawResult } from './searchProviders';
 import { buildQuerySet, buildValidationQueries, deterministicHypotheses, type Hypothesis } from './queryEngine';
 import { evidencePromptBlock, evidenceStats, normalizeEvidence } from './evidenceEngine';
 import {
@@ -34,17 +33,17 @@ export interface StageDef { key: StageKey; label: string; verb: string }
 
 /** Labels double as the intelligent loading states in the UI. */
 export const STAGES: StageDef[] = [
-  { key: 'context', label: 'Audience context', verb: 'Preparing your audience profile' },
-  { key: 'hypotheses', label: 'Search hypotheses', verb: 'Generating search hypotheses' },
-  { key: 'plan', label: 'Query plan', verb: 'Building the layered query plan' },
-  { key: 'search', label: 'Live evidence', verb: 'Scanning current demand' },
-  { key: 'normalize', label: 'Evidence quality', verb: 'Cleaning, deduplicating and weighting sources' },
-  { key: 'signals', label: 'Market signals', verb: 'Extracting evidence-bound signals' },
-  { key: 'niches', label: 'Niche candidates', verb: 'Clustering problems into specific niches' },
-  { key: 'problems', label: 'Problem mining', verb: 'Mining the problems inside each niche' },
-  { key: 'validate', label: 'Adversarial validation', verb: 'Trying to disprove each opportunity' },
-  { key: 'score', label: 'Opportunity scoring', verb: 'Comparing opportunity signals' },
-  { key: 'report', label: 'Opportunity report', verb: 'Building your opportunity report' },
+  { key: 'context', label: 'Your audience', verb: 'Working out who you are selling to' },
+  { key: 'hypotheses', label: 'What to look for', verb: 'Deciding what to search for' },
+  { key: 'plan', label: 'The plan', verb: 'Planning the searches' },
+  { key: 'search', label: 'Real sources', verb: 'Reading current posts and pages' },
+  { key: 'normalize', label: 'Tidying up', verb: 'Removing repeats and noise' },
+  { key: 'signals', label: 'What people say', verb: 'Picking out what people actually complain about' },
+  { key: 'niches', label: 'Groups of people', verb: 'Grouping similar problems together' },
+  { key: 'problems', label: 'The problems', verb: 'Naming the specific problems' },
+  { key: 'validate', label: 'Fact-checking', verb: 'Trying to prove each one wrong' },
+  { key: 'score', label: 'Scoring', verb: 'Scoring each opportunity' },
+  { key: 'report', label: 'Your report', verb: 'Writing up what we found' },
 ];
 
 export interface RunHandle {
@@ -108,7 +107,7 @@ async function collectEvidence(
   queryTypeOverrides?: (q: QuerySpec) => QuerySpec['query_type'],
   tag: 'validation' | undefined = undefined,
 ) {
-  const cfg = settings.search!;
+  const cfg = settings.search ?? ({ id: 'community', enabled: true } as SearchProviderConfig);
   let searchCalls = 0;
   const errors: { query: string; error: string }[] = [];
   const hits = await mapLimit(queries, 3, async (q) => {
@@ -224,6 +223,8 @@ export async function runDiscovery(opts: StartOptions): Promise<RunSummary> {
     }
 
     /* 4 — live search ------------------------------------------------ */
+    /* Per-source call budgets are per run, so refill them here. */
+    resetKeylessBudget();
     const ready = searchProviderReady(settings.search);
     await log.start('search');
     step(18, 'search');

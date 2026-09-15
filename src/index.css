@@ -274,3 +274,184 @@ textarea {
     margin-top: -7px;
   }
 }
+
+/* ------------------------------------------------------------------
+   Pip — the guide mascot.
+   Motion is the whole point: she should read as alive at a glance, but
+   never as busy. Everything here is slow, small and interruptible, and
+   every animation collapses under prefers-reduced-motion.
+   ------------------------------------------------------------------ */
+
+.mascot {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* the pulsing halo that makes her read as "lit up" */
+.mascot__glow {
+  position: absolute;
+  inset: -14%;
+  border-radius: 999px;
+  background: radial-gradient(circle at 52% 46%, rgba(201, 184, 255, 0.55), rgba(201, 184, 255, 0.14) 58%, rgba(201, 184, 255, 0) 74%);
+  animation: mascotGlow 4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.mascot__body {
+  position: relative;
+  overflow: visible;
+}
+
+.mascot__inner {
+  transform-origin: 70px 70px;
+  animation: mascotBob 4s ease-in-out infinite;
+}
+
+.mascot__ring {
+  transform-origin: 70px 70px;
+  animation: mascotSpin 26s linear infinite;
+  opacity: 0.5;
+}
+
+/* Blink: one quick close every few seconds, so it stays subtle. */
+.mascot__eye {
+  transform-origin: center 64px;
+  animation: mascotBlink 5.4s ease-in-out infinite;
+}
+
+.mascot--thinking .mascot__inner { animation-duration: 2.1s; }
+.mascot--thinking .mascot__glow { animation-duration: 1.7s; }
+.mascot--thinking .mascot__ring { animation-duration: 9s; opacity: 0.75; }
+.mascot--thinking .mascot__orbit { transform-origin: 70px 70px; animation: mascotSpin 3.4s linear infinite; }
+
+.mascot--happy .mascot__inner { animation: mascotPop 0.9s ease-out 1, mascotBob 4s ease-in-out 0.9s infinite; }
+.mascot--happy .mascot__glow { animation-duration: 2.4s; }
+
+.mascot--alert .mascot__glow {
+  background: radial-gradient(circle at 52% 46%, rgba(255, 204, 128, 0.6), rgba(255, 204, 128, 0.16) 58%, rgba(255, 204, 128, 0) 74%);
+}
+
+.mascot--sleepy { animation: mascotDoze 6s ease-in-out infinite; }
+.mascot--sleepy .mascot__glow { animation-duration: 7s; opacity: 0.6; }
+.mascot--sleepy .mascot__eye { animation-duration: 9s; }
+
+@keyframes mascotBob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+@keyframes mascotGlow {
+  0%, 100% { opacity: 0.55; transform: scale(0.97); }
+  50% { opacity: 1; transform: scale(1.05); }
+}
+@keyframes mascotSpin {
+  to { transform: rotate(360deg); }
+}
+@keyframes mascotBlink {
+  0%, 92%, 100% { transform: scaleY(1); }
+  95% { transform: scaleY(0.08); }
+}
+@keyframes mascotPop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.09); }
+  100% { transform: scale(1); }
+}
+@keyframes mascotDoze {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(1px) rotate(-2.5deg); }
+}
+@keyframes mascotChipIn {
+  0% { opacity: 0; transform: translateY(8px) scale(0.96); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes mascotChipGlow {
+  0%, 100% { box-shadow: 0 6px 18px rgba(17, 17, 26, 0.06); }
+  50% { box-shadow: 0 10px 26px rgba(124, 92, 255, 0.16); }
+}
+
+/* the hero arrangement: Pip beside her three steps, joined by a rail */
+.mascot-journey {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  padding: 6px 0;
+}
+.mascot-journey__pip { flex-shrink: 0; }
+
+.mascot-steps {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+/* the rail that turns three cards into one journey */
+.mascot-steps::before {
+  content: '';
+  position: absolute;
+  left: 22px;
+  top: 22px;
+  bottom: 22px;
+  width: 2px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, #cdbcff, #a7e8c4 52%, #ffd79b);
+  opacity: 0.55;
+}
+
+.mascot-chip {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 14px 9px 10px;
+  border-radius: 15px;
+  border: 1px solid #ecebf2;
+  background: #fff;
+  animation: mascotChipIn 0.6s ease-out both, mascotChipGlow 6s ease-in-out infinite;
+}
+.mascot-chip__n {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 9px;
+  font-size: 11px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+.mascot-chip__label { display: block; font-size: 13px; font-weight: 600; letter-spacing: -0.01em; white-space: nowrap; }
+.mascot-chip__sub { display: block; font-size: 11.5px; color: #86868b; white-space: nowrap; }
+
+.mascot-chip--lilac .mascot-chip__n { background: #efe6ff; color: #6d4de0; }
+.mascot-chip--moss .mascot-chip__n { background: #e2f6ea; color: #17794a; }
+.mascot-chip--sun .mascot-chip__n { background: #fff1d9; color: #9a6100; }
+
+/* On a phone the vertical journey ate the whole first screen and pushed the
+   headline below the fold — the one line that has to be read first. So below
+   640px it collapses to a single wrapped row of compact chips: same three
+   steps, same order, a fraction of the height. */
+@media (max-width: 640px) {
+  .mascot-journey { gap: 10px; padding: 0; }
+  .mascot-journey__pip { display: none; }
+  .mascot-steps { flex-direction: row; flex-wrap: wrap; gap: 8px; justify-content: center; }
+  .mascot-steps::before { display: none; }
+  .mascot-chip { padding: 6px 11px 6px 8px; border-radius: 12px; }
+  .mascot-chip__n { width: 22px; height: 22px; border-radius: 7px; font-size: 10px; }
+  .mascot-chip__label { font-size: 12px; }
+  .mascot-chip__sub { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mascot__glow,
+  .mascot__inner,
+  .mascot__ring,
+  .mascot__eye,
+  .mascot__orbit,
+  .mascot-chip {
+    animation: none !important;
+  }
+  .mascot--sleepy { animation: none !important; }
+}

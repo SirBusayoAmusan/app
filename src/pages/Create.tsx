@@ -462,7 +462,7 @@ export default function Create() {
           <Card className="pad">
             <div className="flex items-center gap-2 mb-2.5"><Info size={15} /> <h3 className="h3">Smallest viable product</h3></div>
             <p className="text-[12.5px] text-ink-mute leading-relaxed">
-              The engine is tuned to recommend the smallest artefact that solves the validated problem — no membership, cohort or
+              We deliberately recommend the smallest thing that genuinely solves the problem — no membership, cohort or
               software as a first product. Depth beats volume: fewer chapters that fully solve one painful problem convert better.
             </p>
             <div className="mt-3 text-[12px] text-ink-faint">Engine v1.0.0 · prompts {settings?.ai ? 'p1.0.0' : '—'}</div>

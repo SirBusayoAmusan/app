@@ -157,7 +157,7 @@ export default function ProblemDetail() {
             <Card className="pad">
               <SectionTitle
                 title="Why we think this is an opportunity"
-                sub="Adversarial validation: the system actively searched for reasons this would fail."
+                sub="We actively searched for reasons this would fail before showing it to you."
                 icon={<BadgeCheck size={17} />}
               />
               <MarkdownView md={validation.reasoning_summary} />

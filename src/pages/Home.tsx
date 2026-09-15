@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ArrowRight, Compass, Play, Plug, ShieldCheck, Sparkles, Target, TrendingUp, Users, Wand2 } from 'lucide-react';
 import { Page, navigate } from '../components/shell';
+import { MascotJourney } from '../components/Mascot';
 import { Button, Callout, Card, EmptyState, SectionTitle, Stat, Tag, cx } from '../components/ui';
 import { OpportunityCard, type OpportunityRow } from '../components/intelligence';
 import { useStore, sessionState } from '../store';
@@ -16,6 +17,15 @@ export default function Home() {
   const [counts, setCounts] = useState({ evidence: 0, niches: 0, problems: 0, projects: 0 });
   const connected = Boolean(sessionState.connectedAt);
   const searchReady = searchProviderReady(settings?.search).ready;
+
+  /* One next action, in dependency order. */
+  const allReady = connected && searchReady && Boolean(audience);
+  const nextStep = !connected
+    ? { title: 'Connect your AI key', body: 'CreatorTools runs on your own key. It takes about a minute and nothing is stored.', cta: 'Set up', to: '/setup' }
+    : !searchReady
+      ? { title: 'Add a search key', body: 'This is what lets CreatorTools read real pages instead of guessing. Without it, nothing gets called a trend.', cta: 'Add key', to: '/setup' }
+      : { title: 'Describe who you are selling to', body: 'A named audience with a specific problem is what turns research into an opportunity.', cta: 'Set audience', to: '/audience' };
+  const nextStepNumber = !connected ? 1 : !searchReady ? 2 : 3;
   const latestRun = runs[0];
   void sessionVersion;
 
@@ -55,15 +65,22 @@ export default function Home() {
     <Page wide>
       {/* ------------------------------- hero ------------------------------- */}
       <section className="mb-7">
-        <div className="flex items-center gap-2 text-[12.5px] text-ink-faint mb-3">
-          <Sparkles size={13} /> {greeting}, Creator
+        <div className="grid lg:grid-cols-[1.35fr_1fr] gap-6 lg:gap-10 items-center">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 text-[12.5px] text-ink-faint mb-3">
+              <Sparkles size={13} /> {greeting}, Creator
+            </div>
+            <h1 className="text-[30px] sm:text-[40px] lg:text-[46px] font-semibold tracking-[-0.04em] leading-[1.06]">
+              Stop guessing what to sell.
+            </h1>
+            <p className="sub mt-4 max-w-2xl text-[15px] leading-relaxed">
+              Find real problems people are trying to solve, turn them into products, and build the system to sell them.
+            </p>
+          </div>
+          {/* Pip walks the three steps so the shape of the whole product is
+              legible before anyone reads a word of the copy. */}
+          <MascotJourney className="order-first lg:order-none" />
         </div>
-        <h1 className="text-[30px] sm:text-[40px] lg:text-[46px] font-semibold tracking-[-0.04em] leading-[1.06] max-w-3xl">
-          Stop guessing what to sell.
-        </h1>
-        <p className="sub mt-4 max-w-2xl text-[15px] leading-relaxed">
-          Find real problems people are trying to solve, turn them into products, and build the system to sell them.
-        </p>
         <div className="mt-6 flex flex-wrap items-center gap-3">
           <Button size="lg" onClick={() => navigate('/discover')}>
             <Compass size={16} /> Find My Opportunity
@@ -72,28 +89,29 @@ export default function Home() {
         </div>
       </section>
 
-      {/* --------------------------- readiness ------------------------------ */}
-      {(!connected || !searchReady || !audience) ? (
-        <div className="mb-7 space-y-2.5">
-          {!connected ? (
-            <Callout tone="warn" title="Connect your AI provider">
-              CreatorTools uses your own model credits. Keys live in this browser session only — nothing is stored.{' '}
-              <button className="linkbtn" onClick={() => navigate('/setup')}>Open setup →</button>
-            </Callout>
-          ) : null}
-          {!searchReady ? (
-            <Callout tone="warn" title="No live search provider connected">
-              Without current evidence, CreatorTools will not label anything as trending or in demand.{' '}
-              <button className="linkbtn" onClick={() => navigate('/setup')}>Add a search key →</button>
-            </Callout>
-          ) : null}
-          {!audience ? (
-            <Callout tone="info" title="Define your target audience">
-              Audience inputs shape the search queries, problem ranking, pricing and ad targeting.{' '}
-              <button className="linkbtn" onClick={() => navigate('/audience')}>Set audience →</button>
-            </Callout>
-          ) : null}
-        </div>
+      {/* --------------------------- readiness ------------------------------
+          Exactly one thing to do next, never a wall of warnings. The order is
+          the real dependency order: key → evidence → audience → run. */}
+      {!allReady ? (
+        <Card className="pad mb-7">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+            <div className="flex-1 min-w-0">
+              <div className="text-[11.5px] font-medium tracking-[0.06em] uppercase text-ink-faint mb-1">
+                Step {nextStepNumber} of 3
+              </div>
+              <div className="text-[15px] font-semibold">{nextStep.title}</div>
+              <p className="sub mt-1">{nextStep.body}</p>
+            </div>
+            <Button size="lg" className="shrink-0" onClick={() => navigate(nextStep.to)}>
+              {nextStep.cta} <ArrowRight size={15} />
+            </Button>
+          </div>
+          <div className="flex items-center gap-2 mt-4">
+            {[connected, searchReady, Boolean(audience)].map((done, i) => (
+              <div key={i} className={cx('h-1.5 rounded-full flex-1 transition-colors', done ? 'bg-moss-500' : 'bg-line')} />
+            ))}
+          </div>
+        </Card>
       ) : null}
 
       <div className="grid lg:grid-cols-[1.6fr_1fr] gap-5 items-start">
@@ -141,7 +159,7 @@ export default function Home() {
           <div>
             <SectionTitle
               title="Top opportunities"
-              sub={rows.length ? 'Ranked by the deterministic opportunity score, with evidence confidence shown separately.' : undefined}
+              sub={rows.length ? 'Ranked by how strong each one is, with how well the sources back it up shown separately.' : undefined}
               action={rows.length ? <Button variant="quiet" size="sm" onClick={() => navigate('/discover')}>See all <ArrowRight size={13} /></Button> : undefined}
             />
             {top.length ? (
@@ -159,8 +177,8 @@ export default function Home() {
           {/* ------------------------ how it works --------------------- */}
           <Card className="pad">
             <SectionTitle
-              title="The pipeline that produces every recommendation"
-              sub="Eleven stages. Evidence collection and arithmetic are deterministic; the model only interprets what the sources say."
+              title="How each recommendation is made"
+              sub="Eleven steps. Finding the sources and doing the maths are handled by the app, never guessed by the AI."
               icon={<Wand2 size={17} />}
             />
             <ol className="grid sm:grid-cols-2 gap-x-6 gap-y-2.5">
@@ -177,7 +195,7 @@ export default function Home() {
             <blockquote className="text-[15px] leading-relaxed text-ink-soft italic">
               “The internet provides the evidence. AI provides the intelligence. The scoring system provides the differentiation.”
             </blockquote>
-            <div className="mt-3 text-[12px] text-ink-faint">CreatorTools methodology — every score is auditable line by line.</div>
+            <div className="mt-3 text-[12px] text-ink-faint">Every score can be traced back to the exact pages behind it.</div>
           </Card>
         </div>
 
@@ -196,11 +214,11 @@ export default function Home() {
               <Tag tone={connected ? 'moss' : 'sun'}>{connected ? 'AI connected' : 'not connected'}</Tag>
             </div>
             <div className="space-y-2.5 text-[12.5px]">
-              <Row label="AI provider" value={settings?.ai ? `${settings.ai.provider} · ${truncate(settings.ai.model, 26)}` : 'Not set'} onClick={() => navigate('/settings')} />
-              <Row label="Structured mode" value={sessionState.capability?.structured_mode ?? 'unknown'} />
+              <Row label="Your AI" value={settings?.ai ? `${settings.ai.provider} · ${truncate(settings.ai.model, 26)}` : 'Not connected'} onClick={() => navigate('/settings')} />
+              <Row label="AI reply time" value={sessionState.capability ? `${sessionState.capability.latency_ms}ms` : '—'} />
               <Row label="Intelligence source" value={settings?.search?.id && settings.search.id !== 'none' ? settings.search.id : 'none'} onClick={() => navigate('/settings')} />
               <Row label="Search queries / run" value={String(settings?.methodology.max_queries ?? 24)} />
-              <Row label="Evidence freshness window" value={`${settings?.methodology.freshness_days ?? 90} days`} />
+              <Row label="Sources must be newer than" value={`${settings?.methodology.freshness_days ?? 90} days old`} />
             </div>
             <div className="mt-4 pt-4 border-t border-line-soft flex items-start gap-2.5 text-[11.5px] text-ink-faint">
               <ShieldCheck size={14} className="mt-0.5 shrink-0" />
@@ -240,7 +258,7 @@ export default function Home() {
                 ['/trends', 'Trend Intelligence', 'Browse every source collected'],
                 ['/projects', 'My Products', 'Products in build and launched'],
                 ['/marketing', 'Marketing engine', 'Content, email, funnel assets'],
-                ['/learn', 'Methodology', 'Exact formulas and prompts used'],
+                ['/learn', 'How it works', 'Exactly what the app checks, in plain English'],
               ].map(([path, label, sub]) => (
                 <button key={path} onClick={() => navigate(path)} className="w-full text-left rounded-xl px-3 py-2.5 hover:bg-line-soft transition flex items-center justify-between gap-3">
                   <span>

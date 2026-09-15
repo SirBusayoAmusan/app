@@ -60,15 +60,15 @@ export default function Settings() {
   return (
     <Page
       title="Settings"
-      sub="Provider connections, methodology thresholds, data ownership and the exact prompts and formulas running in this app."
-      badge={<Tag tone="moss"><ShieldCheck size={11} /> local-first</Tag>}
+      sub="Your AI connection, how strict the research is, and exactly how your keys are handled."
+      badge={<Tag tone="moss"><ShieldCheck size={11} /> private by design</Tag>}
       actions={<Button onClick={saveConnection}><RefreshCw size={14} /> Save changes</Button>}
     >
       <Tabs
         tabs={[
           { key: 'connection', label: 'Connection' },
-          { key: 'methodology', label: 'Methodology' },
-          { key: 'engine', label: 'Scoring engine' },
+          { key: 'methodology', label: 'How strict' },
+          { key: 'engine', label: 'How scoring works' },
           { key: 'prompts', label: 'Prompts' },
           { key: 'data', label: 'Data' },
         ]}
@@ -82,14 +82,14 @@ export default function Settings() {
             <div className="space-y-4">
               <Card className="pad">
                 <SectionTitle
-                  title="AI provider"
-                  sub="Change, test or remove your provider. Keys are session-only — removing them here clears the current session."
+                  title="Your AI"
+                  sub="Swap the AI you use. A key is only ever held for the current session — clearing it here signs you out."
                   icon={<KeyRound size={16} />}
-                  action={capability ? <Tag tone="moss">{capability.structured_mode}</Tag> : undefined}
+                  action={capability ? <Tag tone="moss">Connected</Tag> : undefined}
                 />
                 {ai ? (
                   <div className="space-y-4">
-                    <Field label="Provider">
+                    <Field label="Which AI">
                       <Select value={ai.provider} onChange={(e: any) => { const p = PRESETS[e.target.value as keyof typeof PRESETS]; setAi({ ...ai, provider: p.id, base_url: p.base_url || ai.base_url, model: p.suggested_models[0] ?? ai.model, structured_mode: null }); }}>
                         {Object.values(PRESETS).map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
                       </Select>
@@ -117,7 +117,7 @@ export default function Settings() {
                         setBusy('test');
                         try {
                           const r = await testConnection(ai, aiKey);
-                          toast({ tone: r.ok ? 'success' : 'error', title: r.ok ? 'Connection OK' : 'Connection failed', body: r.ok ? `${r.model} · ${r.latency_ms}ms · ${r.structured_mode}` : r.error?.message });
+                          toast({ tone: r.ok ? 'success' : 'error', title: r.ok ? 'Working' : 'That did not work', body: r.ok ? `${r.model} · replied in ${r.latency_ms}ms` : r.error?.message });
                           bumpSession();
                         } finally { setBusy(null); }
                       }}>Test connection</Button>
@@ -127,16 +127,16 @@ export default function Settings() {
                     </div>
                   </div>
                 ) : (
-                  <Callout tone="warn" title="No provider configured">
+                  <Callout tone="warn" title="No AI connected yet">
                     <button className="linkbtn" onClick={() => navigate('/setup')}>Run the setup flow →</button>
                   </Callout>
                 )}
               </Card>
 
               <Card className="pad">
-                <SectionTitle title="Live market evidence provider" sub="Without this, discovery cannot make current-market claims." icon={<Database size={16} />} />
+                <SectionTitle title="Where real sources come from" sub="This is what reads actual posts and pages. Without it, nothing gets called a trend." icon={<Database size={16} />} />
                 <div className="space-y-4">
-                  <Field label="Provider">
+                  <Field label="Where sources come from">
                     <Select value={search?.id ?? 'none'} onChange={(e: any) => setSearch({ id: e.target.value, enabled: e.target.value !== 'none', proxy: search?.proxy ?? '' })}>
                       {SEARCH_PROVIDERS.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
                     </Select>
@@ -146,7 +146,7 @@ export default function Settings() {
                       <Field label="API key" hint={searchKey ? `Session: ${maskKey(searchKey)}` : 'No key in memory for this session.'}>
                         <Input type="password" autoComplete="off" className="font-mono text-[13px]" value={searchKey} onChange={(e: any) => { setSearchKey(e.target.value); setCredential(search.id as any, e.target.value); }} />
                       </Field>
-                      <Field label="Optional CORS proxy"><Input value={search.proxy ?? ''} onChange={(e: any) => setSearch({ ...search, proxy: e.target.value })} placeholder="https://proxy.example.com/?url={url}" /></Field>
+                      <Field label="Relay URL (only if a source is blocked on your network)" hint="Leave this empty unless something will not load. Paste a relay address that accepts {url} as the target."><Input value={search.proxy ?? ''} onChange={(e: any) => setSearch({ ...search, proxy: e.target.value })} placeholder="https://your-relay.example.com/?url={url}" /></Field>
                       <div className="flex gap-2">
                         <Button variant="quiet" loading={busy === 'search'} onClick={async () => {
                           setBusy('search');
@@ -171,15 +171,15 @@ export default function Settings() {
 
             <div className="space-y-4">
               <Card className="pad">
-                <h3 className="h3 mb-2.5">Session status</h3>
+                <h3 className="h3 mb-2.5">This session</h3>
                 <div className="space-y-2.5 text-[12.5px]">
-                  <Line label="AI connected" value={sessionState.connectedAt ? new Date(sessionState.connectedAt).toLocaleTimeString() : 'no'} tone={sessionState.connectedAt ? 'moss' : 'neutral'} />
-                  <Line label="Structured mode" value={capability?.structured_mode ?? 'unknown'} tone={capability?.structured_mode === 'json_schema' ? 'moss' : 'sun'} />
-                  <Line label="Models visible" value={String(capability?.models_available ?? 0)} />
-                  <Line label="Last check latency" value={capability ? `${capability.latency_ms}ms` : '—'} />
+                  <Line label="AI connected" value={sessionState.connectedAt ? `yes, at ${new Date(sessionState.connectedAt).toLocaleTimeString()}` : 'not yet'} tone={sessionState.connectedAt ? 'moss' : 'neutral'} />
+                  <Line label="Models available to you" value={String(capability?.models_available ?? 0)} />
+                  <Line label="Response time" value={capability ? `${capability.latency_ms}ms` : '—'} />
+                  <Line label="This version" value={typeof __BUILD_STAMP__ === 'string' ? __BUILD_STAMP__ : 'development'} />
                 </div>
                 {capability?.notes?.length ? (
-                  <div className="mt-3 text-[11.5px] text-ink-faint font-mono space-y-0.5">
+                  <div className="mt-3 text-[11.5px] text-ink-faint space-y-0.5">
                     {capability.notes.map((n) => <div key={n}>{n}</div>)}
                   </div>
                 ) : null}
@@ -188,11 +188,11 @@ export default function Settings() {
               <Card className="pad">
                 <div className="flex items-center gap-2 mb-2.5"><ShieldCheck size={15} /> <h3 className="h3">Key handling</h3></div>
                 <ul className="space-y-2 text-[12.5px] text-ink-mute leading-relaxed">
-                  <li>• Keys live in JavaScript memory for this tab only.</li>
-                  <li>• They are never written to IndexedDB, cookies or localStorage.</li>
-                  <li>• A full page refresh clears them — paste again next session.</li>
-                  <li>• CreatorTools has no backend and cannot see your keys.</li>
-                  <li>• Your AI key is never sent to your search provider, and vice versa.</li>
+                  <li>• Keys are held in memory for this tab only.</li>
+                  <li>• They are never saved to this device, to cookies or to browser storage.</li>
+                  <li>• Refreshing the page clears them — you paste again next time.</li>
+                  <li>• Nobody else can see them, because there is no server in the middle.</li>
+                  <li>• Your AI key is never sent to a source, and vice versa.</li>
                 </ul>
                 <Button
                   className="w-full mt-3.5"
@@ -209,33 +209,33 @@ export default function Settings() {
         {tab === 'methodology' ? (
           <div className="grid lg:grid-cols-[1.3fr_1fr] gap-5 items-start">
             <Card className="pad">
-              <SectionTitle title="Research thresholds" sub="These gates decide when CreatorTools is allowed to call something an opportunity. Raising them costs more search credits but produces stronger evidence." icon={<Wand2 size={16} />} />
+              <SectionTitle title="How strict the research is" sub="These decide when the app is allowed to call something an opportunity. Stricter settings cost a little more per discovery but give you stronger proof." icon={<Wand2 size={16} />} />
               <div className="grid sm:grid-cols-2 gap-4">
-                <Field label="Max queries per run" hint="Default 24. More queries = broader evidence, higher search cost.">
+                <Field label="Searches per discovery" hint="24 by default. More searches means wider coverage and a slightly higher cost.">
                   <Input type="number" min={6} max={80} value={methodology.max_queries} onChange={(e: any) => setMethodology({ ...methodology, max_queries: Number(e.target.value) })} />
                 </Field>
-                <Field label="Results per query">
+                <Field label="Results kept from each search">
                   <Input type="number" min={3} max={15} value={methodology.results_per_query} onChange={(e: any) => setMethodology({ ...methodology, results_per_query: Number(e.target.value) })} />
                 </Field>
-                <Field label="Freshness window (days)" hint="Trend claims prefer sources inside this window.">
+                <Field label="Ignore anything older than (days)" hint="Nothing older than this can be used to claim something is trending.">
                   <Input type="number" min={7} max={3650} value={methodology.freshness_days} onChange={(e: any) => setMethodology({ ...methodology, freshness_days: Number(e.target.value) })} />
                 </Field>
-                <Field label="Priority freshness (days)">
+                <Field label="Give extra weight to sources newer than (days)">
                   <Input type="number" min={7} max={365} value={methodology.priority_freshness_days} onChange={(e: any) => setMethodology({ ...methodology, priority_freshness_days: Number(e.target.value) })} />
                 </Field>
-                <Field label="Minimum evidence items per run">
+                <Field label="Never call it an opportunity with fewer than (sources)">
                   <Input type="number" min={5} max={200} value={methodology.minimum_evidence_items} onChange={(e: any) => setMethodology({ ...methodology, minimum_evidence_items: Number(e.target.value) })} />
                 </Field>
-                <Field label="Minimum independent domains">
+                <Field label="…or fewer than this many different websites">
                   <Input type="number" min={2} max={40} value={methodology.minimum_independent_domains} onChange={(e: any) => setMethodology({ ...methodology, minimum_independent_domains: Number(e.target.value) })} />
                 </Field>
-                <Field label="Niches analysed per run" hint="Problems are mined for the top N niches by specificity and evidence. Others can be mined on demand.">
+                <Field label="Groups analysed per discovery" hint="The most specific, best-evidenced groups get their problems mapped. The rest can be opened later.">
                   <Input type="number" min={1} max={15} value={methodology.analyze_top_niches} onChange={(e: any) => setMethodology({ ...methodology, analyze_top_niches: Number(e.target.value) })} />
                 </Field>
-                <Field label="Problems per niche">
+                <Field label="Problems found in each group">
                   <Input type="number" min={3} max={20} value={methodology.max_problems_per_niche} onChange={(e: any) => setMethodology({ ...methodology, max_problems_per_niche: Number(e.target.value) })} />
                 </Field>
-                <Field label="Signal batch size" hint="Evidence items per signal-extraction call. Smaller is more accurate, larger is cheaper.">
+                <Field label="Sources read at a time" hint="Smaller is more accurate, larger is cheaper.">
                   <Input type="number" min={4} max={30} value={methodology.signal_batch_size} onChange={(e: any) => setMethodology({ ...methodology, signal_batch_size: Number(e.target.value) })} />
                 </Field>
                 <Field label="Niche cluster threshold" hint="0.60-0.90. Higher keeps more near-duplicates separate.">
@@ -405,9 +405,9 @@ evidence_weight = reliability × freshness × relevance × directness × indepen
               <Card className="pad">
                 <div className="flex items-center gap-2 mb-2.5"><Info size={15} /> <h3 className="h3">Known limits</h3></div>
                 <ul className="space-y-2 text-[12.5px] text-ink-mute leading-relaxed">
-                  <li>• Browser calls to third-party APIs can be blocked by CORS, corporate proxies or ad-blockers. Use the optional proxy field if that happens.</li>
-                  <li>• Keys are visible to anything running in this page while the tab is open — don't run untrusted extensions alongside it.</li>
-                  <li>• Search providers charge per query; a full run consumes roughly {methodology.max_queries} search credits plus one credit per deep validation pass.</li>
+                  <li>• Some networks block the sites we read. If something fails to load, the Relay URL field above is the workaround.</li>
+                  <li>• While this tab is open, anything running inside it could read your key — avoid untrusted browser extensions.</li>
+                  <li>• Paid sources charge per search. A full discovery uses about {methodology.max_queries} searches, plus one extra per fact-checking pass.</li>
                 </ul>
               </Card>
             </div>
